@@ -1,0 +1,98 @@
+apply plugin: 'com.android.application'
+apply plugin: 'realm-android'
+
+android {
+    compileSdkVersion 28
+    signingConfigs {
+        // keystore
+        release {
+            storeFile file("pyl.jks") //指定了签名文件，要存放在Module目录下，即与Module的build.gradle同目录
+            storePassword "1234567890"
+            keyAlias "key0"
+            keyPassword "1234567890"
+//            storeFile file("xdyKey.jks") //指定了签名文件，要存放在Module目录下，即与Module的build.gradle同目录
+//            storePassword "yl741010"
+//            keyAlias "key0"
+//            keyPassword "yl741010"
+
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.example.xdyblaster"
+        minSdkVersion 24
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        sourceSets {
+            main {
+                jniLibs.srcDir 'libs'
+                jni.srcDirs = []    //disable automatic ndk-build
+            }
+        }
+        ndk {
+            abiFilters "armeabi ", "armeabi-v7a"
+        }
+        signingConfig signingConfigs.release
+
+    }
+
+    compileOptions {
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
+    }
+
+
+    buildTypes {
+        debug {
+            //debug版本也使用release签名
+            signingConfig signingConfigs.release
+        }
+
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    testImplementation 'junit:junit:4.13'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    implementation 'androidx.recyclerview:recyclerview:1.2.0-alpha03'
+
+    implementation 'pub.devrel:easypermissions:1.0.1'
+    api 'com.jakewharton:butterknife:10.2.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:10.2.1'
+    implementation 'com.wang.avi:library:2.1.3'
+    implementation 'com.android.support:support-v4:28.0.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.7.2'
+
+    implementation 'com.github.yuzhiqiang1993:zxing:2.2.8'
+    implementation 'com.android.support:gridlayout-v7:28.0.0'
+
+    implementation 'com.github.rokudol:PswText:v1.0.4'
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+    implementation 'me.jessyan:autosize:0.9.5'
+    implementation 'com.akexorcist:RoundCornerProgressBar:2.0.3'
+    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.github.Jay-Goo:RangeSeekBar:v3.0.0'
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+    implementation 'org.apache.mina:mina-core:2.1.3'
+    implementation 'org.slf4j:slf4j-api:2.0.0-alpha1'
+    implementation 'org.slf4j:slf4j-log4j12:2.0.0-alpha1'
+
+    implementation 'com.github.bumptech.glide:glide:4.9.0'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.6'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
+
+}

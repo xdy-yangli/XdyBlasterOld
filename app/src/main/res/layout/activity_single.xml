@@ -1,0 +1,798 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/gray_bg"
+    android:keepScreenOn="true"
+    tools:context=".SingleActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@color/main2">
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="6dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:text="测试雷管"
+                android:textColor="#ffffff"
+                android:textSize="28sp" />
+
+            <fragment
+                android:id="@+id/fr_volt"
+                android:name="com.example.xdyblaster.fragment.FragmentVolt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="6dp" />
+
+        </RelativeLayout>
+
+<!--        <LinearLayout-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:orientation="horizontal">-->
+
+<!--            <TextView-->
+<!--                android:id="@+id/tv_company"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="54dp"-->
+<!--                android:background="@color/main2"-->
+<!--                android:gravity="center_vertical|center_horizontal"-->
+<!--                android:text="测试雷管"-->
+<!--                android:textColor="#ffffff"-->
+<!--                android:textSize="20sp"-->
+<!--                app:autoSizeMaxTextSize="24dp"-->
+<!--                app:autoSizeMinTextSize="12dp"-->
+<!--                app:autoSizeStepGranularity="2sp"-->
+<!--                app:autoSizeTextType="uniform"-->
+<!--                tools:layout_editor_absoluteX="143dp"-->
+<!--                tools:layout_editor_absoluteY="16dp" />-->
+
+<!--        </LinearLayout>-->
+<!--        <fragment-->
+<!--            android:id="@+id/fr_volt"-->
+<!--            android:name="com.example.xdyblaster.Fragment.FragmentVolt"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content" />-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/round"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <RelativeLayout
+                android:id="@+id/ltTest1"
+                android:layout_width="match_parent"
+                android:layout_height="48dp">
+
+                <com.wang.avi.AVLoadingIndicatorView
+                    android:id="@+id/avi1"
+                    style="@style/AVLoadingIndicatorView.Large"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="24dp"
+                    android:visibility="visible"
+                    app:indicatorColor="@color/main3"
+                    app:indicatorName="LineSpinFadeLoaderIndicator" />
+
+                <TextView
+                    android:id="@+id/tvTest1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:text="编码"
+                    android:textSize="28sp" />
+
+                <TextView
+                    android:id="@+id/tvResult1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_centerHorizontal="true"
+                    android:text="ID"
+                    android:textSize="28sp" />
+
+                <ImageView
+                    android:id="@+id/ivok1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorGreen"
+                    app:srcCompat="@mipmap/ic_check_white_48dp" />
+
+                <ImageView
+                    android:id="@+id/ivError1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorRed"
+                    app:srcCompat="@mipmap/ic_close_white_48dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_alignParentBottom="true"
+                    android:background="?android:attr/listDivider" />
+            </RelativeLayout>
+
+
+            <RelativeLayout
+                android:id="@+id/ltTest2"
+                android:layout_width="match_parent"
+                android:layout_height="48dp">
+
+                <com.wang.avi.AVLoadingIndicatorView
+                    android:id="@+id/avi2"
+                    style="@style/AVLoadingIndicatorView.Large"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="24dp"
+                    android:visibility="visible"
+                    app:indicatorColor="@color/main3"
+                    app:indicatorName="LineSpinFadeLoaderIndicator" />
+
+
+                <TextView
+                    android:id="@+id/tvTest2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:text="位置"
+                    android:textSize="28sp" />
+
+                <TextView
+                    android:id="@+id/tvResult2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_centerHorizontal="true"
+                    android:text="ID"
+                    android:textSize="28sp" />
+
+                <ImageView
+                    android:id="@+id/ivok2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorGreen"
+                    app:srcCompat="@mipmap/ic_check_white_48dp" />
+
+                <ImageView
+                    android:id="@+id/ivError2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorRed"
+                    app:srcCompat="@mipmap/ic_close_white_48dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_alignParentBottom="true"
+                    android:background="?android:attr/listDivider" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/ltTest3"
+                android:layout_width="match_parent"
+                android:layout_height="48dp">
+
+                <com.wang.avi.AVLoadingIndicatorView
+                    android:id="@+id/avi3"
+                    style="@style/AVLoadingIndicatorView.Large"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="24dp"
+                    android:visibility="visible"
+                    app:indicatorColor="@color/main3"
+                    app:indicatorName="LineSpinFadeLoaderIndicator" />
+
+
+                <TextView
+                    android:id="@+id/tvTest3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:text="延时"
+                    android:textSize="28sp" />
+
+                <TextView
+                    android:id="@+id/tvResult3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_centerHorizontal="true"
+                    android:text="ID"
+                    android:textSize="28sp" />
+
+                <ImageView
+                    android:id="@+id/ivok3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorGreen"
+                    app:srcCompat="@mipmap/ic_check_white_48dp" />
+
+                <ImageView
+                    android:id="@+id/ivError3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorRed"
+                    app:srcCompat="@mipmap/ic_close_white_48dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_alignParentBottom="true"
+                    android:background="?android:attr/listDivider" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/ltTest4"
+                android:layout_width="match_parent"
+                android:layout_height="48dp">
+
+                <com.wang.avi.AVLoadingIndicatorView
+                    android:id="@+id/avi4"
+                    style="@style/AVLoadingIndicatorView.Large"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="24dp"
+                    android:visibility="visible"
+                    app:indicatorColor="@color/main3"
+                    app:indicatorName="LineSpinFadeLoaderIndicator" />
+
+
+                <TextView
+                    android:id="@+id/tvTest4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:text="电流"
+                    android:textSize="28sp" />
+
+                <TextView
+                    android:id="@+id/tvResult4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_centerHorizontal="true"
+                    android:text="ID"
+                    android:textSize="28sp" />
+
+                <ImageView
+                    android:id="@+id/ivok4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorGreen"
+                    app:srcCompat="@mipmap/ic_check_white_48dp" />
+
+                <ImageView
+                    android:id="@+id/ivError4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorRed"
+                    app:srcCompat="@mipmap/ic_close_white_48dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_alignParentBottom="true"
+                    android:background="?android:attr/listDivider" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/ltTest5"
+                android:layout_width="match_parent"
+                android:layout_height="48dp">
+
+                <com.wang.avi.AVLoadingIndicatorView
+                    android:id="@+id/avi5"
+                    style="@style/AVLoadingIndicatorView.Large"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="24dp"
+                    android:visibility="visible"
+                    app:indicatorColor="@color/main3"
+                    app:indicatorName="LineSpinFadeLoaderIndicator" />
+
+
+                <TextView
+                    android:id="@+id/tvTest5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:text="电容"
+                    android:textSize="28sp" />
+
+                <TextView
+                    android:id="@+id/tvResult5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_centerHorizontal="true"
+                    android:text="ID"
+                    android:textSize="28sp" />
+
+                <ImageView
+                    android:id="@+id/ivok5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorGreen"
+                    app:srcCompat="@mipmap/ic_check_white_48dp" />
+
+                <ImageView
+                    android:id="@+id/ivError5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorRed"
+                    app:srcCompat="@mipmap/ic_close_white_48dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_alignParentBottom="true"
+                    android:background="?android:attr/listDivider" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/ltTest6"
+                android:layout_width="match_parent"
+                android:layout_height="48dp">
+
+                <com.wang.avi.AVLoadingIndicatorView
+                    android:id="@+id/avi6"
+                    style="@style/AVLoadingIndicatorView.Large"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="24dp"
+                    android:visibility="visible"
+                    app:indicatorColor="@color/main3"
+                    app:indicatorName="LineSpinFadeLoaderIndicator" />
+
+
+                <TextView
+                    android:id="@+id/tvTest6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:text="桥丝"
+                    android:textSize="28sp" />
+
+                <TextView
+                    android:id="@+id/tvResult6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_centerHorizontal="true"
+                    android:text="ID"
+                    android:textSize="28sp" />
+
+                <ImageView
+                    android:id="@+id/ivok6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorGreen"
+                    app:srcCompat="@mipmap/ic_check_white_48dp" />
+
+                <ImageView
+                    android:id="@+id/ivError6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorRed"
+                    app:srcCompat="@mipmap/ic_close_white_48dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_alignParentBottom="true"
+                    android:background="?android:attr/listDivider" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/ltTest7"
+                android:layout_width="match_parent"
+                android:layout_height="48dp">
+
+                <com.wang.avi.AVLoadingIndicatorView
+                    android:id="@+id/avi7"
+                    style="@style/AVLoadingIndicatorView.Large"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="24dp"
+                    android:visibility="visible"
+                    app:indicatorColor="@color/main3"
+                    app:indicatorName="LineSpinFadeLoaderIndicator" />
+
+
+                <TextView
+                    android:id="@+id/tvTest7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:text="主频"
+                    android:textSize="28sp" />
+
+                <TextView
+                    android:id="@+id/tvResult7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_centerHorizontal="true"
+                    android:text="ID"
+                    android:textSize="28sp" />
+
+                <ImageView
+                    android:id="@+id/ivok7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorGreen"
+                    app:srcCompat="@mipmap/ic_check_white_48dp" />
+
+                <ImageView
+                    android:id="@+id/ivError7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorRed"
+                    app:srcCompat="@mipmap/ic_close_white_48dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_alignParentBottom="true"
+                    android:background="?android:attr/listDivider" />
+            </RelativeLayout>
+            <RelativeLayout
+                android:id="@+id/ltTest8"
+                android:layout_width="match_parent"
+                android:layout_height="48dp">
+
+                <com.wang.avi.AVLoadingIndicatorView
+                    android:id="@+id/avi8"
+                    style="@style/AVLoadingIndicatorView.Large"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="24dp"
+                    android:visibility="visible"
+                    app:indicatorColor="@color/main3"
+                    app:indicatorName="LineSpinFadeLoaderIndicator"
+                     />
+
+                <TextView
+                    android:id="@+id/tvTest8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:text="副频"
+                    android:textSize="28sp" />
+
+                <TextView
+                    android:id="@+id/tvResult8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_centerHorizontal="true"
+                    android:text="ID"
+                    android:textSize="28sp" />
+
+                <ImageView
+                    android:id="@+id/ivok8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorGreen"
+                    app:srcCompat="@mipmap/ic_check_white_48dp" />
+
+                <ImageView
+                    android:id="@+id/ivError8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:tint="@color/colorRed"
+                    app:srcCompat="@mipmap/ic_close_white_48dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_alignParentBottom="true"
+                    android:background="?android:attr/listDivider" />
+            </RelativeLayout>
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:background="@drawable/round"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/tvStep"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:textSize="32dp"
+                android:textColor="@color/blue"
+                android:text="校准电流" />
+
+            <com.wang.avi.AVLoadingIndicatorView
+                android:id="@+id/aviWait"
+                style="@style/AVLoadingIndicatorView.Large"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_alignBottom="@id/tvStep"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="48dp"
+                app:indicatorColor="@color/blue"
+                app:indicatorName="LineSpinFadeLoaderIndicator" />
+
+            <TextView
+                android:id="@+id/tvTestCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:textColor="@color/red"
+                android:textSize="24sp"
+                android:layout_marginEnd="8dp"
+                android:text="总数：0" />
+        </RelativeLayout>
+
+
+<!--        <LinearLayout-->
+<!--            android:id="@+id/lt_f1"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="80dp"-->
+<!--            android:background="@color/white"-->
+<!--            android:orientation="horizontal"-->
+<!--            android:paddingStart="2dp"-->
+<!--            android:paddingTop="2dp"-->
+<!--            android:paddingEnd="2dp">-->
+
+
+<!--            <Button-->
+<!--                android:id="@+id/btF1"-->
+<!--                style="@style/ButtonText"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="match_parent"-->
+<!--                android:layout_gravity="center"-->
+<!--                android:layout_marginEnd="4dp"-->
+<!--                android:layout_weight="1"-->
+<!--                android:background="@drawable/blue_btn"-->
+<!--                android:text="F1.启动快速测试"-->
+<!--                android:textColor="@color/white"-->
+<!--                android:textSize="24sp" />-->
+
+
+<!--        </LinearLayout>-->
+<!--        <LinearLayout-->
+<!--            android:id="@+id/lt_f1_stop"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="80dp"-->
+<!--            android:background="@color/white"-->
+<!--            android:orientation="horizontal"-->
+<!--            android:paddingStart="2dp"-->
+<!--            android:paddingTop="2dp"-->
+<!--            android:paddingEnd="2dp">-->
+
+
+<!--            <Button-->
+<!--                android:id="@+id/btF1Stop"-->
+<!--                style="@style/ButtonText"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="match_parent"-->
+<!--                android:layout_gravity="center"-->
+<!--                android:layout_marginEnd="4dp"-->
+<!--                android:layout_weight="1"-->
+<!--                android:background="@drawable/red_btn"-->
+<!--                android:text="F1.停止快速测试"-->
+<!--                android:textColor="@color/white"-->
+<!--                android:textSize="24sp" />-->
+<!--        </LinearLayout>-->
+
+<!--        <LinearLayout-->
+<!--            android:id="@+id/lt_f2"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="80dp"-->
+<!--            android:background="@color/white"-->
+<!--            android:orientation="horizontal"-->
+<!--            android:layout_marginBottom="4dp"-->
+<!--            android:paddingStart="2dp"-->
+<!--            android:paddingTop="2dp"-->
+<!--            android:paddingEnd="2dp">-->
+
+
+<!--            <Button-->
+<!--                android:id="@+id/btF2"-->
+<!--                style="@style/ButtonText"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="match_parent"-->
+<!--                android:layout_gravity="center"-->
+<!--                android:layout_marginEnd="4dp"-->
+<!--                android:layout_weight="1"-->
+<!--                android:background="@drawable/blue_btn"-->
+<!--                android:text="F2.启动完整测试"-->
+<!--                android:textColor="@color/white"-->
+<!--                android:textSize="24sp" />-->
+
+
+<!--        </LinearLayout>-->
+<!--        <LinearLayout-->
+<!--            android:id="@+id/lt_f2_stop"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="80dp"-->
+<!--            android:background="@color/white"-->
+<!--            android:orientation="horizontal"-->
+<!--            android:layout_marginBottom="4dp"-->
+<!--            android:paddingStart="2dp"-->
+<!--            android:paddingTop="2dp"-->
+<!--            android:paddingEnd="2dp">-->
+
+
+<!--            <Button-->
+<!--                android:id="@+id/btF2Stop"-->
+<!--                style="@style/ButtonText"-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_height="match_parent"-->
+<!--                android:layout_gravity="center"-->
+<!--                android:layout_marginEnd="4dp"-->
+<!--                android:layout_weight="1"-->
+<!--                android:background="@drawable/red_btn"-->
+<!--                android:text="F2.停止完整测试"-->
+<!--                android:textColor="@color/white"-->
+<!--                android:textSize="24sp" />-->
+
+
+<!--        </LinearLayout>-->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1px"
+            android:background="@color/colorBlack2" />
+        <FrameLayout
+            android:id="@+id/layout_speed_Test"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:background="@drawable/custom_btn"
+            android:clickable="true"
+            android:focusable="true"
+            android:orientation="horizontal"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp">
+
+            <ImageView
+                android:id="@+id/ivSetTimer"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="32dp"
+                android:tint="@color/main3"
+
+                app:srcCompat="@mipmap/ic_speed" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:shadowColor="#20000000"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="1"
+                android:text="F1.快速测试"
+                android:textColor="@color/colorPrimary"
+                android:textSize="28sp" />
+
+            <ImageView
+                android:id="@+id/iv_speed"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="16dp"
+                android:tint="@color/green"
+                android:visibility="invisible"
+                app:srcCompat="@mipmap/ic_check_white_48dp" />
+
+
+        </FrameLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1px"
+            android:background="@color/colorBlack2" />
+
+        <FrameLayout
+            android:id="@+id/layout_full_test"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:background="@drawable/custom_btn"
+            android:clickable="true"
+            android:focusable="true"
+            android:orientation="horizontal"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp">
+
+            <ImageView
+                android:id="@+id/ivCharge"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="32dp"
+                android:tint="@color/main3"
+                app:srcCompat="@mipmap/ic_full" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:shadowColor="#20000000"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="1"
+                android:text="F2.完整测试"
+                android:textColor="@color/colorPrimary"
+                android:textSize="28sp" />
+
+            <ImageView
+                android:id="@+id/iv_full"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="16dp"
+                android:tint="@color/green"
+                android:visibility="gone"
+                app:srcCompat="@mipmap/ic_check_white_48dp" />
+
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

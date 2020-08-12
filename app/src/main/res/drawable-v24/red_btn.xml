@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_pressed="true">
+        <shape>
+            <solid android:color="#ef4444" />
+            <stroke android:width="1dp" android:color="#992f2f" />
+            <corners android:radius="5dp" />
+            <padding android:bottom="10dp" android:left="10dp" android:right="10dp" android:top="10dp" />
+        </shape>
+    </item>
+    <item>
+        <shape>
+            <gradient android:angle="270" android:startColor="#ff0038" android:endColor="#bf002a" />
+            <stroke android:width="1dp" android:color="#2f6699" />
+            <corners android:radius="6dp" />
+            <padding android:bottom="10dp" android:left="10dp" android:right="10dp" android:top="10dp" />
+        </shape>
+    </item>
+
+<!--    list.add(new GradientColor(0xFFcc1c4d, 0xFF9e032e));-->
+<!--    list.add(new GradientColor(0xFFce2029, 0xFF9e030b));-->
+<!--    list.add(new GradientColor(0xFF94121c, 0xFF6e060d));-->
+<!--    list.add(new GradientColor(0xFFa32a00, 0xFF891700));-->
+<!--    list.add(new GradientColor(0xFFe34234, 0xFFad2416));-->
+<!--    list.add(new GradientColor(0xFFff2600, 0xFFbf1d00));-->
+<!--    list.add(new GradientColor(0xFFff0038, 0xFFbf002a));-->
+<!--    list.add(new GradientColor(0xFFff4e00, 0xFFc72b00));-->
+<!--    list.add(new GradientColor(0xFFe85c12, 0xFFb53300));-->
+<!--    list.add(new GradientColor(0xFFff7518, 0xFFaa3e00));-->
+<!--    list.add(new GradientColor(0xFFff8f00, 0xFFf26c0d));-->
+<!--    list.add(new GradientColor(0xFFff9f00, 0xFFf27500));-->
+<!--    list.add(new GradientColor(0xFFff8249, 0xFFf06937));-->
+<!--    list.add(new GradientColor(0xFFd06a3e, 0xFFb55632));-->
+<!--    list.add(new GradientColor(0xFF964b00, 0xFF713a00));-->
+<!--    list.add(new GradientColor(0xFF703422, 0xFF521c13));-->
+<!--    list.add(new GradientColor(0xFF8c3611, 0xFF69270d));-->
+<!--    list.add(new GradientColor(0xFF633826, 0xFF4f1a03));-->
+<!--    list.add(new GradientColor(0xFF73420e, 0xFF593000));-->
+<!--    list.add(new GradientColor(0xFF956642, 0xFF704d32));-->
+<!--    list.add(new GradientColor(0xFFc18e60, 0xFF996a3d));-->
+<!--    list.add(new GradientColor(0xFFd27f29, 0xFFa65c11));-->
+<!--    list.add(new GradientColor(0xFFffb300, 0xFFed7710));-->
+<!--    list.add(new GradientColor(0xFFffd900, 0xFFffa400));-->
+<!--    list.add(new GradientColor(0xFFffca1d, 0xFFf5a71c));-->
+<!--    list.add(new GradientColor(0xFFfff300, 0xFFffd400));-->
+<!--    list.add(new GradientColor(0xFFd4de1b, 0xFFb5bf07));-->
+<!--    list.add(new GradientColor(0xFFc1f900, 0xFF9fde23));-->
+<!--    list.add(new GradientColor(0xFF9cc925, 0xFF7ba60d));-->
+<!--    list.add(new GradientColor(0xFF6c8b1b, 0xFF57730e));-->
+<!--    list.add(new GradientColor(0xFF697800, 0xFF4a5200));-->
+<!--    list.add(new GradientColor(0xFF515918, 0xFF343b04));-->
+<!--    list.add(new GradientColor(0xFF5ba825, 0xFF377d00));-->
+<!--    list.add(new GradientColor(0xFF49b700, 0xFF378900));-->
+<!--    list.add(new GradientColor(0xFF1c881c, 0xFF156615));-->
+<!--    list.add(new GradientColor(0xFF007e3e, 0xFF005b2a));-->
+<!--    list.add(new GradientColor(0xFF009876, 0xFF007259));-->
+<!--    list.add(new GradientColor(0xFF00b3a2, 0xFF009488));-->
+<!--    list.add(new GradientColor(0xFF338594, 0xFF006779));-->
+<!--    list.add(new GradientColor(0xFF0095b7, 0xFF007089));-->
+<!--    list.add(new GradientColor(0xFF00aeef, 0xFF0090bf));-->
+<!--    list.add(new GradientColor(0xFF21d1f7, 0xFF00a2d9));-->
+<!--    list.add(new GradientColor(0xFF3794dd, 0xFF136db5));-->
+<!--    list.add(new GradientColor(0xFF0064bf, 0xFF004f96));-->
+<!--    list.add(new GradientColor(0xFF3983b6 ,0xFF246594));-->
+<!--    list.add(new GradientColor(0xFF0085ff, 0xFF0064bf));-->
+<!--    list.add(new GradientColor(0xFF2870e3, 0xFF1e54aa));-->
+<!--    list.add(new GradientColor(0xFF003494, 0xFF00205d));-->
+<!--    list.add(new GradientColor(0xFF481884, 0xFF33036e));-->
+<!--    list.add(new GradientColor(0xFF7c279b, 0xFF5d1d74));-->
+<!--    list.add(new GradientColor(0xFFce3c92, 0xFFab156d));-->
+<!--    list.add(new GradientColor(0xFFffaac9, 0xFFcc7695));-->
+<!--    list.add(new GradientColor(0xFFff95a3, 0xFFd9737f));-->
+<!--    list.add(new GradientColor(0xFFfb5589, 0xFFc43b67));-->
+<!--    list.add(new GradientColor(0xFFf42376, 0xFFd02261));-->
+<!--    list.add(new GradientColor(0xFFff308f, 0xFFbf246b));-->
+<!--    list.add(new GradientColor(0xFFe33e61, 0xFFb3213e));-->
+
+</selector>

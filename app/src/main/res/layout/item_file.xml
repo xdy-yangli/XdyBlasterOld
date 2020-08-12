@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<CheckedTextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@android:id/text1"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    android:singleLine="true"
+    android:drawableStart="?android:attr/listChoiceIndicatorSingle"
+    android:drawablePadding="20dp"
+    android:gravity="center_vertical"
+    android:textSize="30sp"
+    android:layout_marginEnd="16dp"
+    android:maxLines="1"
+    android:textColor="@color/colorBlack1"
+    android:autoSizeMaxTextSize="30sp"
+    app:autoSizeMinTextSize="12sp"
+    app:autoSizeStepGranularity="1sp"
+    app:autoSizeTextType="uniform" />
+<!--    android:checkMark="?android:attr/listChoiceIndicatorSingle"-->
+
+
+
