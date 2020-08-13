@@ -1,11 +1,13 @@
 package com.example.xdyblaster;
 
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
@@ -14,13 +16,23 @@ import android.widget.FrameLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.xdyblaster.entity.VersionEntity;
+import com.example.xdyblaster.retrofit2.ApiService;
+import com.example.xdyblaster.retrofit2.LoadingDialog;
+import com.example.xdyblaster.retrofit2.LoadingDialogObserver;
+import com.example.xdyblaster.retrofit2.retrofit.CustomHttpClient;
+import com.example.xdyblaster.retrofit2.retrofit.CustomRetrofit;
 import com.example.xdyblaster.system.SystemActivity;
 import com.example.xdyblaster.util.DataViewModel;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import me.jessyan.autosize.internal.CustomAdapt;
+import okhttp3.OkHttpClient;
 import utils.SerialPortUtils;
 
 import static com.example.xdyblaster.util.CommDetonator.COMM_READ_DEV_ID;
@@ -98,8 +110,9 @@ public class SettingActivity extends AppCompatActivity implements CustomAdapt {
                 startActivity(intent);
                 break;
             case R.id.layout_position:
-                intent = new Intent(SettingActivity.this, MapActivity.class);
-                startActivity(intent);
+                loadVersionInfo();
+//                intent = new Intent(SettingActivity.this, MapActivity.class);
+//                startActivity(intent);
                 break;
             case R.id.layout_system:
                 intent = new Intent(SettingActivity.this, SystemActivity.class);
@@ -127,5 +140,51 @@ public class SettingActivity extends AppCompatActivity implements CustomAdapt {
         return 500;
     }
 
+    private void loadVersionInfo() {
+        OkHttpClient client = new CustomHttpClient()
+                .setConnectTimeout(5_000)
+                .setShowLog(true)
+                .createOkHttpClient();
+        new CustomRetrofit()
+                //我在app的build.gradle文件的defaultConfig标签里定义了BASE_URL
+                .setBaseUrl("https://raw.githubusercontent.com/")
+                .setOkHttpClient(client)
+                .createRetrofit()
+                .create(ApiService.class)
+                .getVersionInfo()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new LoadingDialogObserver<String>(createLoadingDialog()) {
+                    @Override
+                    public void onStart(Disposable disposable) {
 
+                    }
+
+                    @Override
+                    public void onResult(String s) {
+                        s = s.substring(1, s.length() - 1);
+                        VersionEntity entity = VersionEntity.fromJson(s);
+//                        showUpdateTipsDialog(entity);
+                    }
+
+                    @Override
+                    public void onException(Throwable e) {
+                        e.printStackTrace();
+                    }
+
+                    @Override
+                    public void onCompleteOrCancel(Disposable disposable) {
+
+                    }
+                });
+    }
+    protected Dialog createLoadingDialog() {
+        return createLoadingDialog("Loading…");
+    }
+    protected Dialog createLoadingDialog(CharSequence txt) {
+        LoadingDialog dialog = new LoadingDialog(this);
+        dialog.setMessage(txt);
+        dialog.showMessageView(!TextUtils.isEmpty(txt));
+        return dialog;
+    }
 }

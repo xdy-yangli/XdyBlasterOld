@@ -3,6 +3,7 @@ package com.example.xdyblaster;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -42,7 +43,13 @@ import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.model.LatLng;
 import com.example.xdyblaster.ble.BleManager;
+import com.example.xdyblaster.entity.VersionEntity;
 import com.example.xdyblaster.fragment.FragmentVolt;
+import com.example.xdyblaster.retrofit2.ApiService;
+import com.example.xdyblaster.retrofit2.LoadingDialog;
+import com.example.xdyblaster.retrofit2.LoadingDialogObserver;
+import com.example.xdyblaster.retrofit2.retrofit.CustomHttpClient;
+import com.example.xdyblaster.retrofit2.retrofit.CustomRetrofit;
 import com.example.xdyblaster.system.BleActivity;
 import com.example.xdyblaster.util.CommDetonator;
 import com.example.xdyblaster.util.DataViewModel;
@@ -62,7 +69,11 @@ import android_serialport_api.SerialPortFinder;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import me.jessyan.autosize.internal.CustomAdapt;
+import okhttp3.OkHttpClient;
 import pub.devrel.easypermissions.EasyPermissions;
 import utils.SerialPortUtils;
 
@@ -503,6 +514,7 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
                 intent = new Intent(MainActivity.this, AuthorizeActivity.class);
                 startActivity(intent);
 
+
 //                if (!dataViewModel.getFileName().isEmpty()) {
 //                    FragmentSelect fragmentSelect = new FragmentSelect();
 //                    fragmentSelect.setCancelable(true);
@@ -889,26 +901,29 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
      * 构造广播监听类，监听 SDK key 验证以及网络异常广播
      */
     public class SDKReceiver extends BroadcastReceiver {
+        @SuppressLint("SetTextI18n")
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             if (TextUtils.isEmpty(action)) {
                 return;
             }
-
-
             title.setTextColor(Color.RED);
-            if (action.equals(SDKInitializer.SDK_BROADTCAST_ACTION_STRING_PERMISSION_CHECK_ERROR)) {
-                // 开放鉴权错误信息描述
-                title.setText("key 验证出错! 错误码 :"
-                        + intent.getIntExtra(SDKInitializer.SDK_BROADTCAST_INTENT_EXTRA_INFO_KEY_ERROR_CODE, 0)
-                        + " ; 错误信息 ："
-                        + intent.getStringExtra(SDKInitializer.SDK_BROADTCAST_INTENT_EXTRA_INFO_KEY_ERROR_MESSAGE));
-            } else if (action.equals(SDKInitializer.SDK_BROADTCAST_ACTION_STRING_PERMISSION_CHECK_OK)) {
-                title.setText("key 验证成功! 功能可以正常使用");
-                title.setTextColor(Color.GREEN);
-            } else if (action.equals(SDKInitializer.SDK_BROADCAST_ACTION_STRING_NETWORK_ERROR)) {
-                title.setText("网络出错");
+            switch (action) {
+                case SDKInitializer.SDK_BROADTCAST_ACTION_STRING_PERMISSION_CHECK_ERROR:
+                    // 开放鉴权错误信息描述
+                    title.setText("key 验证出错! 错误码 :"
+                            + intent.getIntExtra(SDKInitializer.SDK_BROADTCAST_INTENT_EXTRA_INFO_KEY_ERROR_CODE, 0)
+                            + " ; 错误信息 ："
+                            + intent.getStringExtra(SDKInitializer.SDK_BROADTCAST_INTENT_EXTRA_INFO_KEY_ERROR_MESSAGE));
+                    break;
+                case SDKInitializer.SDK_BROADTCAST_ACTION_STRING_PERMISSION_CHECK_OK:
+                    title.setText("key 验证成功! 功能可以正常使用");
+                    title.setTextColor(Color.GREEN);
+                    break;
+                case SDKInitializer.SDK_BROADCAST_ACTION_STRING_NETWORK_ERROR:
+                    title.setText("网络出错");
+                    break;
             }
         }
     }
