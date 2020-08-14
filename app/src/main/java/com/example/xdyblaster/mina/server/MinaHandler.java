@@ -49,7 +49,7 @@ public class MinaHandler extends IoHandlerAdapter {
 
 	public void sessionClosed(IoSession session){
 		connctionMap.remove(session.getAttribute("sn"));
-		session.close(true);
+		session.closeNow();//close(true);
 		Log.e("mina",session.getId()+ "连接关闭:"+session.getAttribute("sn"));
 		System.out.println(session.getId()+ "连接关闭:"+session.getAttribute("sn"));
 	}

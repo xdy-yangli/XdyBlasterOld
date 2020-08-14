@@ -1,5 +1,6 @@
 package com.example.xdyblaster.ble;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,6 +43,7 @@ public class BleAdapter extends RecyclerView.Adapter<BleAdapter.BleHolder> {
         return mDatas.size();
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull final BleHolder bleHolder, final int position) {
         BleData bleData;
@@ -86,7 +88,7 @@ public class BleAdapter extends RecyclerView.Adapter<BleAdapter.BleHolder> {
         @Override
         public void onClick(View v) {
             if (onItemClickListener != null) {
-                onItemClickListener.onItemClick(v, getAdapterPosition());
+                onItemClickListener.onItemClick(v, getBindingAdapterPosition());
             }
         }
 

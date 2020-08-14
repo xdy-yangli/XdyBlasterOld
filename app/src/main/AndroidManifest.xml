@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.xdyblaster">
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -22,8 +21,8 @@
 
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" /> <!-- 、<uses-permission android:name="android.permission.WRITE_SETTINGS" /> -->
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <uses-feature
         android:glEsVersion="0x00020000"
@@ -41,10 +40,18 @@
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.lxtwsw.weather.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepath" />
+        </provider>
 
-
-        <activity android:name=".system.DelayActivity"></activity>
-        <activity android:name=".FaceRegisterActivity" />
+        <activity android:name=".system.DelayActivity"/>
+<!--        <activity android:name=".FaceRegisterActivity" />-->
         <activity android:name=".DownloadAuthActivity" />
         <activity android:name=".system.DailyActivity" />
         <activity android:name=".ResultDataActivity" />
@@ -55,7 +62,7 @@
         <activity android:name=".LgDataActivity" />
         <activity android:name=".MapActivity" />
         <activity android:name=".AuthViewActivity" />
-        <activity android:name=".RegisterAndRecognizeActivity" />
+<!--        <activity android:name=".RegisterAndRecognizeActivity" />-->
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

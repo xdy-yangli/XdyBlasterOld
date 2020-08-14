@@ -36,7 +36,7 @@ public class MinaHandler extends IoHandlerAdapter {
 	}
 
 	public void sessionClosed(IoSession session){
-		session.close(true);
+		session.closeNow();//close(true);
 		//logger.info(session.getId()+ "连接关闭");
 	}
 

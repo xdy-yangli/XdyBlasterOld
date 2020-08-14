@@ -24,15 +24,24 @@ import com.example.xdyblaster.retrofit2.retrofit.CustomHttpClient;
 import com.example.xdyblaster.retrofit2.retrofit.CustomRetrofit;
 import com.example.xdyblaster.system.SystemActivity;
 import com.example.xdyblaster.util.DataViewModel;
+import com.example.xdyblaster.util.DownloadUtil;
+
+import org.jetbrains.annotations.NotNull;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import constant.UiType;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import listener.Md5CheckResultListener;
+import listener.UpdateDownloadListener;
 import me.jessyan.autosize.internal.CustomAdapt;
+import model.UiConfig;
+import model.UpdateConfig;
 import okhttp3.OkHttpClient;
+import update.UpdateAppUtils;
 import utils.SerialPortUtils;
 
 import static com.example.xdyblaster.util.CommDetonator.COMM_READ_DEV_ID;
@@ -73,6 +82,10 @@ public class SettingActivity extends AppCompatActivity implements CustomAdapt {
     private SerialPortUtils serialPortUtils;
     private DataViewModel dataViewModel;
 
+    private String apkUrl ="http://192.168.0.111:12321/app-debug.apk";
+    private String updateTitle = "发现新版本V2.0.0";
+    private String updateContent = "1、Kotlin重构版\n2、支持自定义UI\n3、增加md5校验\n4、更多功能等你探索";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +98,8 @@ public class SettingActivity extends AppCompatActivity implements CustomAdapt {
         dataViewModel = new ViewModelProvider(serialPortUtils.mActivity).get(DataViewModel.class);
         dataViewModel.systemCount = 0;
         dataViewModel.keyHandler = handler;
+
+        UpdateAppUtils.init(this);
 
     }
 
@@ -110,7 +125,9 @@ public class SettingActivity extends AppCompatActivity implements CustomAdapt {
                 startActivity(intent);
                 break;
             case R.id.layout_position:
-                loadVersionInfo();
+                new DownloadUtil(SettingActivity.this, apkUrl, "123.apk");
+  //              loadVersionInfo();
+    //            testDownload();
 //                intent = new Intent(SettingActivity.this, MapActivity.class);
 //                startActivity(intent);
                 break;
@@ -119,8 +136,8 @@ public class SettingActivity extends AppCompatActivity implements CustomAdapt {
                 startActivity(intent);
                 break;
             case R.id.layout_face:
-                intent = new Intent(SettingActivity.this, RegisterAndRecognizeActivity.class);
-                startActivity(intent);
+//                intent = new Intent(SettingActivity.this, RegisterAndRecognizeActivity.class);
+//                startActivity(intent);
                 break;
         }
     }
@@ -139,6 +156,55 @@ public class SettingActivity extends AppCompatActivity implements CustomAdapt {
     public float getSizeInDp() {
         return 500;
     }
+
+    public void testDownload()
+    {
+        UpdateConfig updateConfig = new UpdateConfig();
+        updateConfig.setCheckWifi(true);
+        updateConfig.setNeedCheckMd5(false);
+        updateConfig.setNotifyImgRes(R.mipmap.ic_add_location_white_48dp);
+
+        UiConfig uiConfig = new UiConfig();
+        uiConfig.setUiType(UiType.PLENTIFUL);
+
+        UpdateAppUtils
+                .getInstance()
+                .apkUrl(apkUrl)
+                .updateTitle(updateTitle)
+                .updateContent(updateContent)
+                .uiConfig(uiConfig)
+                .updateConfig(updateConfig)
+                .setMd5CheckResultListener(new Md5CheckResultListener() {
+                    @Override
+                    public void onResult(boolean result) {
+
+                    }
+                })
+                .setUpdateDownloadListener(new UpdateDownloadListener() {
+                    @Override
+                    public void onStart() {
+
+                    }
+
+                    @Override
+                    public void onDownload(int progress) {
+
+                    }
+
+                    @Override
+                    public void onFinish() {
+
+                    }
+
+                    @Override
+                    public void onError(@NotNull Throwable e) {
+
+                    }
+                })
+                .update();
+
+    }
+
 
     private void loadVersionInfo() {
         OkHttpClient client = new CustomHttpClient()

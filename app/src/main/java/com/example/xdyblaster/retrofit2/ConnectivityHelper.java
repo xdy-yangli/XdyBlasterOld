@@ -18,25 +18,25 @@ public class ConnectivityHelper {
 		ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 		Objects.requireNonNull(cm);
 		NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-		return networkInfo != null && networkInfo.isAvailable();
+		return networkInfo != null && networkInfo.isConnected();//.isAvailable();
 	}
 	
-	/**
-	 * 判断网络是否可用
-	 * 
-	 * @param context context
-	 * @return boolean
-	 */
-	public static boolean isConnectivityAvailable(Context context) {
-		// 判断网络是否可用
-		ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-		Objects.requireNonNull(cm);
-        NetworkInfo info = cm.getActiveNetworkInfo();
-		if (info == null || !info.isConnected()) {
-			return false;
-		}
-		return info.isAvailable() || info.isRoaming();
-	}
+//	/**
+//	 * 判断网络是否可用
+//	 *
+//	 * @param context context
+//	 * @return boolean
+//	 */
+//	public static boolean isConnectivityAvailable(Context context) {
+//		// 判断网络是否可用
+//		ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+//		Objects.requireNonNull(cm);
+//        NetworkInfo info = cm.getActiveNetworkInfo();
+//		if (info == null || !info.isConnected()) {
+//			return false;
+//		}
+//		return info.isConnected()/*isAvailable()*/ || info.isRoaming();
+//	}
 
 
 }
