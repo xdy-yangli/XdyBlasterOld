@@ -123,6 +123,7 @@ public class VerActivity extends AppCompatActivity {
                     infoDialog.setMessage("写入成功！");
                     infoDialog.setCancelable(true);
                     infoDialog.show(getSupportFragmentManager(), "info");
+                    dataViewModel.devId = "";
                     break;
                 case COMM_READ_DEV_ID:
                     if (values[1] == 1) {
@@ -144,7 +145,7 @@ public class VerActivity extends AppCompatActivity {
                     break;
                 case COMM_READ_DEV_VER:
                     if (values[1] == 1) {
-                        byte[] b = new byte[11];
+                        byte[] b = new byte[12];
                         b[0] = (byte) (values[2] & 0x0ff);
                         b[1] = (byte) ((values[2] >> 8) & 0x0ff);
                         b[2] = (byte) ((values[2] >> 16) & 0x0ff);
@@ -156,6 +157,7 @@ public class VerActivity extends AppCompatActivity {
                         b[8] = (byte) (values[4] & 0x0ff);
                         b[9] = (byte) ((values[4] >> 8) & 0x0ff);
                         b[10] = (byte) ((values[4] >> 16) & 0x0ff);
+                        b[11] = (byte) ((values[4] >> 24) & 0x0ff);
                         etXmbh.setText(new String(b));
                         waitPublish = false;
                     }

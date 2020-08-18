@@ -29,6 +29,7 @@ import com.example.xdyblaster.util.KeyReceiver;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -231,6 +232,7 @@ public class SystemActivity extends AppCompatActivity implements CustomAdapt {
                         }
                     }
                     waitPublish = false;
+                    break;
                 case COMM_RESET:
                     if (values[1] == -1) {
                         runOnUiThread(new Runnable() {
@@ -301,24 +303,35 @@ public class SystemActivity extends AppCompatActivity implements CustomAdapt {
                 voltDialog();
                 break;
             case R.id.layout_update:
-                File file;
-                FileInputStream fis;
-                DataInputStream dis;
-                file = new File(getSDPath() + "//xdyBlaster//code.bin");
-                if (!file.exists())
-                    showError("请复制升级文件到文件夹xdyBlaster!");
-                else {
-                    try {
-                        fis = new FileInputStream(file);
-                        dis = new DataInputStream(fis);
-                        fileLen = ((dis.available() + 7) / 8) * 8;
-                        fileData = new byte[fileLen];
-                        if (dis.read(fileData) != 0)
-                            updateDialog();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                try {
+                    InputStream is = getAssets().open("code.bin");
+                    fileLen = ((is.available() + 7) / 8) * 8;
+                    fileData = new byte[fileLen];
+                    if (is.read(fileData) != 0)
+                        updateDialog();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
+
+
+//                File file;
+//                FileInputStream fis;
+//                DataInputStream dis;
+//                file = new File(getSDPath() + "//xdyBlaster//code.bin");
+//                if (!file.exists())
+//                    showError("请复制升级文件到文件夹xdyBlaster!");
+//                else {
+//                    try {
+//                        fis = new FileInputStream(file);
+//                        dis = new DataInputStream(fis);
+//                        fileLen = ((dis.available() + 7) / 8) * 8;
+//                        fileData = new byte[fileLen];
+//                        if (dis.read(fileData) != 0)
+//                            updateDialog();
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                }
                 break;
             case R.id.layout_encode:
                 Intent intent = new Intent(SystemActivity.this, EncodeActivity.class);

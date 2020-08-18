@@ -53,8 +53,8 @@
                         android:layout_height="48dp"
                         android:layout_gravity="center_vertical"
                         android:layout_marginStart="32dp"
-                        android:tint="@color/main3"
-                        app:srcCompat="@mipmap/ic_settings_brightness_white_48dp" />
+                        app:srcCompat="@mipmap/ic_settings_brightness_white_48dp"
+                        app:tint="@color/main3" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -92,8 +92,8 @@
                         android:layout_height="48dp"
                         android:layout_gravity="center_vertical"
                         android:layout_marginStart="32dp"
-                        android:tint="@color/main3"
-                        app:srcCompat="@mipmap/ic_volume_up_white_48dp" />
+                        app:srcCompat="@mipmap/ic_volume_up_white_48dp"
+                        app:tint="@color/main3" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -131,9 +131,9 @@
                         android:layout_height="48dp"
                         android:layout_gravity="center_vertical"
                         android:layout_marginStart="32dp"
-                        android:tint="@color/main3"
 
-                        app:srcCompat="@mipmap/ic_wifi_white_48dp" />
+                        app:srcCompat="@mipmap/ic_wifi_white_48dp"
+                        app:tint="@color/main3" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -166,13 +166,12 @@
                     android:paddingBottom="24dp">
 
                     <ImageView
-                        android:layout_width="48dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="48dp"
                         android:layout_gravity="center_vertical"
                         android:layout_marginStart="32dp"
-                        android:tint="@color/main3"
-
-                        app:srcCompat="@mipmap/ic_add_location_white_48dp" />
+                        app:srcCompat="@mipmap/ic_add_location_white_48dp"
+                        app:tint="@color/main3" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -194,7 +193,44 @@
                     android:layout_height="1px"
                     android:background="@color/colorBlack2" />
 
+                <FrameLayout
+                    android:id="@+id/layout_update"
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp"
+                    android:background="@drawable/custom_btn"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="horizontal"
+                    android:paddingTop="24dp"
+                    android:paddingBottom="24dp">
 
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="32dp"
+                        app:srcCompat="@mipmap/ic_cloud_download_white_48dp"
+                        app:tint="@color/main3" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:shadowColor="#20000000"
+                        android:shadowDx="2"
+                        android:shadowDy="2"
+                        android:shadowRadius="1"
+                        android:text="5.软件升级"
+                        android:textColor="@color/colorPrimary"
+                        android:textSize="28sp" />
+
+
+                </FrameLayout>
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="@color/colorBlack2" />
                 <FrameLayout
                     android:id="@+id/layout_system"
                     android:layout_width="match_parent"
@@ -211,9 +247,9 @@
                         android:layout_height="48dp"
                         android:layout_gravity="center_vertical"
                         android:layout_marginStart="32dp"
-                        android:tint="@color/main3"
 
-                        app:srcCompat="@mipmap/ic_bug_report_white_48dp" />
+                        app:srcCompat="@mipmap/ic_bug_report_white_48dp"
+                        app:tint="@color/main3" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -224,7 +260,7 @@
                         android:shadowDx="2"
                         android:shadowDy="2"
                         android:shadowRadius="1"
-                        android:text="5.工程菜单"
+                        android:text="6.工程菜单"
                         android:textColor="@color/colorPrimary"
                         android:textSize="28sp" />
 

@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
-    android:padding="20dp"
-    android:elevation="4dp"
     android:background="@drawable/round_white"
-    >
+    android:elevation="4dp"
+    android:orientation="vertical"
+    android:padding="20dp">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -16,12 +15,12 @@
 
         <ImageView
             android:id="@+id/iv_logo"
-            app:srcCompat="@mipmap/ic_assignment_white_48dp"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_centerVertical="true"
             android:layout_marginEnd="8dp"
-            android:tint="@color/colorRed" />
+            app:srcCompat="@mipmap/ic_assignment_white_48dp"
+            app:tint="@color/colorRed" />
 
         <TextView
             android:id="@+id/tv_title"
@@ -43,33 +42,55 @@
         android:layout_weight="1"
         android:orientation="vertical">
 
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="60dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="10dp"
+                android:text="扫描总数"
+                android:textColor="@color/black"
+                android:textSize="24sp" />
+
+            <TextView
+                android:id="@+id/tv_total"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="10dp"
+                android:text="0"
+                android:textSize="24sp" />
+        </RelativeLayout>
 
         <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="60dp">
+            android:layout_width="match_parent"
+            android:layout_height="60dp">
 
-        <CheckBox
-            android:id="@+id/cb_correct"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:textSize="24sp"
-            android:layout_marginStart="10dp"
-            android:textColor="@color/green"
-            android:text="正常" />
+            <CheckBox
+                android:id="@+id/cb_correct"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="10dp"
+                android:text="正常"
+                android:textColor="@color/green"
+                android:textSize="24sp" />
 
-        <TextView
-            android:id="@+id/tv_correct"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:textSize="24sp"
-            android:layout_marginEnd="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0" />
+            <TextView
+                android:id="@+id/tv_correct"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="10dp"
+                android:text="0"
+                android:textSize="24sp" />
+        </RelativeLayout>
 
-
-    </RelativeLayout>
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
@@ -84,23 +105,24 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:textSize="24sp"
                 android:layout_marginStart="10dp"
+                android:text="比方案缺少的"
                 android:textColor="@color/colorRed"
-                android:text="比方案缺少的" />
+                android:textSize="24sp" />
 
             <TextView
                 android:id="@+id/tv_error"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:textSize="24sp"
-                android:layout_marginEnd="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0" />
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="10dp"
+                android:text="0"
+                android:textSize="24sp" />
 
 
         </RelativeLayout>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
@@ -115,27 +137,29 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:textSize="24sp"
                 android:layout_marginStart="10dp"
+                android:text="比方案多接的"
                 android:textColor="@color/blue"
-                android:text="比方案多接的" />
+                android:textSize="24sp" />
 
             <TextView
                 android:id="@+id/tv_outline"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:textSize="24sp"
-                android:layout_marginEnd="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0" />
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="10dp"
+                android:text="0"
+                android:textSize="24sp" />
 
 
         </RelativeLayout>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@color/colorBlack2" />
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="60dp">
@@ -145,22 +169,23 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:textSize="24sp"
                 android:layout_marginStart="10dp"
-                android:text="产品秒量与方案不同" />
+                android:text="产品秒量与方案不同"
+                android:textSize="24sp" />
 
             <TextView
                 android:id="@+id/tv_time"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:textSize="24sp"
-                android:layout_marginEnd="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0" />
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="10dp"
+                android:text="0"
+                android:textSize="24sp" />
 
 
         </RelativeLayout>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
@@ -175,22 +200,23 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:textSize="24sp"
                 android:layout_marginStart="10dp"
-                android:text="产品区号与方案不同" />
+                android:text="产品区号与方案不同"
+                android:textSize="24sp" />
 
             <TextView
                 android:id="@+id/tv_row"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:textSize="24sp"
-                android:layout_marginEnd="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0" />
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="10dp"
+                android:text="0"
+                android:textSize="24sp" />
 
 
         </RelativeLayout>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
@@ -205,27 +231,27 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
-                android:textSize="24sp"
                 android:layout_marginStart="10dp"
-                android:text="产品孔号与方案不同" />
+                android:text="产品孔号与方案不同"
+                android:textSize="24sp" />
 
             <TextView
                 android:id="@+id/tv_hole"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:textSize="24sp"
-                android:layout_marginEnd="10dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0" />
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="10dp"
+                android:text="0"
+                android:textSize="24sp" />
 
 
         </RelativeLayout>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@color/colorBlack2" />
-
 
 
     </LinearLayout>

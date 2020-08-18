@@ -52,6 +52,7 @@ public class DataViewModel extends AndroidViewModel {
     public byte[] uuidBuffer = new byte[1024 * 16];
 
     public String devId, userId = "123456789012345678";
+    public String devVer;
     public String htid, xmbh, dwdm, jd, wd, bpsj;
     public int commErr = 0, countDown = 0, overStop = 0;
     public int defaultVolt;

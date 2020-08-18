@@ -3,6 +3,7 @@ package com.example.xdyblaster;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -27,6 +28,7 @@ import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -72,6 +74,7 @@ import io.realm.Realm;
 import me.jessyan.autosize.internal.CustomAdapt;
 import utils.SerialPortUtils;
 
+import static android.view.KeyEvent.KEYCODE_POWER;
 import static android.view.KeyEvent.KEYCODE_UNKNOWN;
 import static com.example.xdyblaster.MainActivity.actionScan;
 import static com.example.xdyblaster.MainActivity.actionStartScan;
@@ -350,6 +353,13 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
         Intent intent = new Intent();
         intent.setAction(ACTION_SCAN_INIT);
         sendBroadcast(intent);
+
+        final IntentFilter homeFilter = new IntentFilter(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+        registerReceiver(homePressReceiver, homeFilter);
+
+        //电源键监听
+        final IntentFilter batFilter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
+        registerReceiver(mBatInfoReceiver, batFilter);
     }
 
 
@@ -449,8 +459,11 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
 //        dataViewModel.keyHandler = null;
         mRealm.close();
         unregisterReceiver(barcodeReceiver);
+        unregisterReceiver(mBatInfoReceiver);
+        unregisterReceiver(homePressReceiver);
         mMediaPlayer.release();
         mMediaPlayer2.release();
+
         super.onDestroy();
     }
 
@@ -1526,6 +1539,14 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
     }
 
     @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (event.getKeyCode() == KEYCODE_POWER) {
+            Toast.makeText(getApplicationContext(), "电源按下！", Toast.LENGTH_SHORT).show();
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
     public void onBackPressed() {
         if (dataViewModel.dataChanged) {
             FragmentLoad fragmentLoad = new FragmentLoad();
@@ -1576,4 +1597,42 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
 //            scanUtil = null;
         }
     }
+
+    private final BroadcastReceiver homePressReceiver = new BroadcastReceiver() {
+        final String SYSTEM_DIALOG_REASON_KEY = "reason";
+        final String SYSTEM_DIALOG_REASON_HOME_KEY = "homekey";
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action.equals(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
+                String reason = intent.getStringExtra(SYSTEM_DIALOG_REASON_KEY);
+                if (reason != null && reason.equals(SYSTEM_DIALOG_REASON_HOME_KEY)) {
+                    System.out.println("home键监听");
+                    saveDataChange();
+                }
+            }
+        }
+    };
+
+    private final BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(final Context context, final Intent intent) {
+            final String action = intent.getAction();
+            if (Intent.ACTION_SCREEN_OFF.equals(action)) {
+                saveDataChange();
+                System.out.println("电源键监听");
+            }
+        }
+    };
+
+    private void saveDataChange() {
+        if (dataViewModel.dataChanged) {
+            FileFunc.saveDetonatorFile(dataViewModel.fileName, dataViewModel.detonatorSetting, dataViewModel.detonatorDatas);
+            dataViewModel.dataChanged = false;
+        }
+    }
 }
+
+
+

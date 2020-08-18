@@ -21,10 +21,8 @@ import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.xdyblaster.R;
-import com.example.xdyblaster.util.DailyData;
 import com.example.xdyblaster.util.DataViewModel;
 import com.example.xdyblaster.util.DetonatorData;
-import com.example.xdyblaster.util.FileFunc;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -69,10 +67,12 @@ public class FragmentResult extends DialogFragment {
     @BindView(R.id.lt_button)
     LinearLayout ltButton;
     Unbinder unbinder;
-    int correct, error, timeErr, rowErr, holeErr, outline;
+    int correct, error, timeErr, rowErr, holeErr, outline, count;
     int viewFlag, total;
     public OnButtonClickListener onButtonClickListener;
     Realm mRealm = Realm.getDefaultInstance();
+    @BindView(R.id.tv_total)
+    TextView tvTotal;
 
     @Override
     public void onDestroyView() {
@@ -158,6 +158,7 @@ public class FragmentResult extends DialogFragment {
         holeErr = 0;
         rowErr = 0;
         outline = 0;
+        count = 0;
         int color;
         for (DetonatorData d : dataViewModel.detonatorDatas) {
             color = d.getColor();
@@ -192,6 +193,7 @@ public class FragmentResult extends DialogFragment {
         tvHole.setText(String.valueOf(holeErr));
         tvTime.setText(String.valueOf(timeErr));
         tvOutline.setText(String.valueOf(outline));
+        tvTotal.setText(String.valueOf(tvTotal));
 
 //        if(!mRealm.isInTransaction()) {
 //            mRealm.executeTransaction(new Realm.Transaction() {
@@ -216,7 +218,6 @@ public class FragmentResult extends DialogFragment {
 //        {
 //            e.printStackTrace();
 //        }
-
 
 
 //        sortType = bundle.getInt("sort type", 0);

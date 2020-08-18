@@ -1,13 +1,11 @@
 package com.example.xdyblaster;
 
 import android.annotation.SuppressLint;
-import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
-import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
@@ -16,36 +14,23 @@ import android.widget.FrameLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.xdyblaster.entity.VersionEntity;
-import com.example.xdyblaster.retrofit2.ApiService;
-import com.example.xdyblaster.retrofit2.LoadingDialog;
-import com.example.xdyblaster.retrofit2.LoadingDialogObserver;
-import com.example.xdyblaster.retrofit2.retrofit.CustomHttpClient;
-import com.example.xdyblaster.retrofit2.retrofit.CustomRetrofit;
 import com.example.xdyblaster.system.SystemActivity;
 import com.example.xdyblaster.util.DataViewModel;
-import com.example.xdyblaster.util.DownloadUtil;
-
-import org.jetbrains.annotations.NotNull;
+import com.xuexiang.xupdate.XUpdate;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import constant.UiType;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-import listener.Md5CheckResultListener;
-import listener.UpdateDownloadListener;
 import me.jessyan.autosize.internal.CustomAdapt;
-import model.UiConfig;
-import model.UpdateConfig;
-import okhttp3.OkHttpClient;
-import update.UpdateAppUtils;
 import utils.SerialPortUtils;
 
-import static com.example.xdyblaster.util.CommDetonator.COMM_READ_DEV_ID;
-import static com.example.xdyblaster.util.CommDetonator.COMM_STOP_OUTPUT;
+//import constant.UiType;
+//import listener.Md5CheckResultListener;
+//import listener.UpdateDownloadListener;
+//import me.jessyan.autosize.internal.CustomAdapt;
+//import model.UiConfig;
+//import model.UpdateConfig;
+//import update.UpdateAppUtils;
 
 public class SettingActivity extends AppCompatActivity implements CustomAdapt {
 
@@ -79,12 +64,15 @@ public class SettingActivity extends AppCompatActivity implements CustomAdapt {
             }
         }
     };
+    @BindView(R.id.layout_update)
+    FrameLayout layoutUpdate;
     private SerialPortUtils serialPortUtils;
     private DataViewModel dataViewModel;
 
-    private String apkUrl ="http://192.168.0.111:12321/app-debug.apk";
+    private String apkUrl = "http://gzyte.com.cn/download/app-debug.apk";
     private String updateTitle = "发现新版本V2.0.0";
     private String updateContent = "1、Kotlin重构版\n2、支持自定义UI\n3、增加md5校验\n4、更多功能等你探索";
+    private String mUpdateUrl = "http://gzyte.com.cn/download/update_test.json";
 
 
     @Override
@@ -99,7 +87,7 @@ public class SettingActivity extends AppCompatActivity implements CustomAdapt {
         dataViewModel.systemCount = 0;
         dataViewModel.keyHandler = handler;
 
-        UpdateAppUtils.init(this);
+        //  UpdateAppUtils.init(this);
 
     }
 
@@ -109,7 +97,8 @@ public class SettingActivity extends AppCompatActivity implements CustomAdapt {
         super.onDestroy();
     }
 
-    @OnClick({R.id.layout_wifi, R.id.layout_display, R.id.layout_sound, R.id.layout_position, R.id.layout_system, R.id.layout_face})
+    @SuppressLint("ResourceAsColor")
+    @OnClick({R.id.layout_wifi, R.id.layout_display, R.id.layout_sound, R.id.layout_position, R.id.layout_system, R.id.layout_face, R.id.layout_update})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.layout_wifi:
@@ -125,15 +114,20 @@ public class SettingActivity extends AppCompatActivity implements CustomAdapt {
                 startActivity(intent);
                 break;
             case R.id.layout_position:
-                new DownloadUtil(SettingActivity.this, apkUrl, "123.apk");
-  //              loadVersionInfo();
-    //            testDownload();
-//                intent = new Intent(SettingActivity.this, MapActivity.class);
-//                startActivity(intent);
+                intent = new Intent(SettingActivity.this, MapActivity.class);
+                startActivity(intent);
                 break;
             case R.id.layout_system:
                 intent = new Intent(SettingActivity.this, SystemActivity.class);
                 startActivity(intent);
+                break;
+            case R.id.layout_update:
+                XUpdate.newBuild(SettingActivity.this)
+                        .updateUrl(mUpdateUrl)
+//                        .promptThemeColor(R.color.blue)
+//                        .promptWidthRatio(2.4F)
+//                        .promptHeightRatio(2.3F)
+                        .update();
                 break;
             case R.id.layout_face:
 //                intent = new Intent(SettingActivity.this, RegisterAndRecognizeActivity.class);
@@ -157,100 +151,54 @@ public class SettingActivity extends AppCompatActivity implements CustomAdapt {
         return 500;
     }
 
-    public void testDownload()
-    {
-        UpdateConfig updateConfig = new UpdateConfig();
-        updateConfig.setCheckWifi(true);
-        updateConfig.setNeedCheckMd5(false);
-        updateConfig.setNotifyImgRes(R.mipmap.ic_add_location_white_48dp);
 
-        UiConfig uiConfig = new UiConfig();
-        uiConfig.setUiType(UiType.PLENTIFUL);
+//    public void testDownload()
+//    {
+//        UpdateConfig updateConfig = new UpdateConfig();
+//        updateConfig.setCheckWifi(true);
+//        updateConfig.setNeedCheckMd5(false);
+//        updateConfig.setNotifyImgRes(R.mipmap.ic_add_location_white_48dp);
+//
+//        UiConfig uiConfig = new UiConfig();
+//        uiConfig.setUiType(UiType.PLENTIFUL);
+//
+//        UpdateAppUtils
+//                .getInstance()
+//                .apkUrl(apkUrl)
+//                .updateTitle(updateTitle)
+//                .updateContent(updateContent)
+//                .uiConfig(uiConfig)
+//                .updateConfig(updateConfig)
+//                .setMd5CheckResultListener(new Md5CheckResultListener() {
+//                    @Override
+//                    public void onResult(boolean result) {
+//
+//                    }
+//                })
+//                .setUpdateDownloadListener(new UpdateDownloadListener() {
+//                    @Override
+//                    public void onStart() {
+//
+//                    }
+//
+//                    @Override
+//                    public void onDownload(int progress) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onFinish() {
+//
+//                    }
+//
+//                    @Override
+//                    public void onError(@NotNull Throwable e) {
+//
+//                    }
+//                })
+//                .update();
+//
+//    }
 
-        UpdateAppUtils
-                .getInstance()
-                .apkUrl(apkUrl)
-                .updateTitle(updateTitle)
-                .updateContent(updateContent)
-                .uiConfig(uiConfig)
-                .updateConfig(updateConfig)
-                .setMd5CheckResultListener(new Md5CheckResultListener() {
-                    @Override
-                    public void onResult(boolean result) {
 
-                    }
-                })
-                .setUpdateDownloadListener(new UpdateDownloadListener() {
-                    @Override
-                    public void onStart() {
-
-                    }
-
-                    @Override
-                    public void onDownload(int progress) {
-
-                    }
-
-                    @Override
-                    public void onFinish() {
-
-                    }
-
-                    @Override
-                    public void onError(@NotNull Throwable e) {
-
-                    }
-                })
-                .update();
-
-    }
-
-
-    private void loadVersionInfo() {
-        OkHttpClient client = new CustomHttpClient()
-                .setConnectTimeout(5_000)
-                .setShowLog(true)
-                .createOkHttpClient();
-        new CustomRetrofit()
-                //我在app的build.gradle文件的defaultConfig标签里定义了BASE_URL
-                .setBaseUrl("https://raw.githubusercontent.com/")
-                .setOkHttpClient(client)
-                .createRetrofit()
-                .create(ApiService.class)
-                .getVersionInfo()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new LoadingDialogObserver<String>(createLoadingDialog()) {
-                    @Override
-                    public void onStart(Disposable disposable) {
-
-                    }
-
-                    @Override
-                    public void onResult(String s) {
-                        s = s.substring(1, s.length() - 1);
-                        VersionEntity entity = VersionEntity.fromJson(s);
-//                        showUpdateTipsDialog(entity);
-                    }
-
-                    @Override
-                    public void onException(Throwable e) {
-                        e.printStackTrace();
-                    }
-
-                    @Override
-                    public void onCompleteOrCancel(Disposable disposable) {
-
-                    }
-                });
-    }
-    protected Dialog createLoadingDialog() {
-        return createLoadingDialog("Loading…");
-    }
-    protected Dialog createLoadingDialog(CharSequence txt) {
-        LoadingDialog dialog = new LoadingDialog(this);
-        dialog.setMessage(txt);
-        dialog.showMessageView(!TextUtils.isEmpty(txt));
-        return dialog;
-    }
 }

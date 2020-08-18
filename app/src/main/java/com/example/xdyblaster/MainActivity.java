@@ -3,19 +3,13 @@ package com.example.xdyblaster;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
-import android.location.LocationProvider;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -29,6 +23,7 @@ import android.view.Window;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -36,42 +31,40 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.baidu.location.BDAbstractLocationListener;
-import com.baidu.location.BDLocation;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.model.LatLng;
 import com.example.xdyblaster.ble.BleManager;
-import com.example.xdyblaster.entity.VersionEntity;
 import com.example.xdyblaster.fragment.FragmentVolt;
-import com.example.xdyblaster.retrofit2.ApiService;
-import com.example.xdyblaster.retrofit2.LoadingDialog;
-import com.example.xdyblaster.retrofit2.LoadingDialogObserver;
-import com.example.xdyblaster.retrofit2.retrofit.CustomHttpClient;
-import com.example.xdyblaster.retrofit2.retrofit.CustomRetrofit;
+import com.example.xdyblaster.http.OKHttpUpdateHttpService;
 import com.example.xdyblaster.system.BleActivity;
+import com.example.xdyblaster.system.SystemActivity;
 import com.example.xdyblaster.util.CommDetonator;
 import com.example.xdyblaster.util.DataViewModel;
 import com.example.xdyblaster.util.DetonatorSetting;
-import com.example.xdyblaster.util.FileFunc;
 import com.example.xdyblaster.util.InfoDialog;
 import com.example.xdyblaster.util.KeyReceiver;
 import com.example.xdyblaster.util.ObservVolt;
+import com.xuexiang.xhttp2.XHttp;
+import com.xuexiang.xhttp2.XHttpSDK;
+import com.xuexiang.xupdate.XUpdate;
+import com.xuexiang.xupdate.entity.UpdateError;
+import com.xuexiang.xupdate.listener.OnUpdateFailureListener;
+import com.xuexiang.xupdate.utils.UpdateUtils;
+import com.zhy.http.okhttp.OkHttpUtils;
 
-import java.io.File;
+import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import android_serialport_api.SerialPortFinder;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 import me.jessyan.autosize.internal.CustomAdapt;
 import okhttp3.OkHttpClient;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -88,11 +81,16 @@ import static android.view.KeyEvent.KEYCODE_7;
 import static android.view.KeyEvent.KEYCODE_8;
 import static android.view.KeyEvent.KEYCODE_9;
 import static android.view.KeyEvent.KEYCODE_DPAD_UP;
+import static com.example.xdyblaster.util.CommDetonator.COMM_DELAY;
 import static com.example.xdyblaster.util.CommDetonator.COMM_GET_BATT;
 import static com.example.xdyblaster.util.CommDetonator.COMM_READ_DEV_ID;
+import static com.example.xdyblaster.util.CommDetonator.COMM_READ_DEV_VER;
+import static com.example.xdyblaster.util.CommDetonator.COMM_RESET;
 import static com.example.xdyblaster.util.CommDetonator.COMM_STOP_OUTPUT;
+import static com.example.xdyblaster.util.CommDetonator.COMM_UPDATE;
 import static com.example.xdyblaster.util.FileFunc.checkFileExists;
 import static com.example.xdyblaster.util.FileFunc.getSystemModel;
+import static com.xuexiang.xupdate.entity.UpdateError.ERROR.CHECK_NO_NEW_VERSION;
 
 public class MainActivity extends AppCompatActivity implements CustomAdapt, EasyPermissions.PermissionCallbacks, SerialPortUtils.OnDataReceiveListener, SerialPortUtils.OnKeyDataListener {
 
@@ -154,6 +152,9 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
     private SerialPortFinder serialPortFinder;
     boolean f1, f2;
     public int lcdWidth;
+    InfoDialog infoDialog;
+    public byte[] fileData;
+    public int fileLen;
 
 
     FragmentVolt frVolt;
@@ -192,9 +193,24 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
             super.handleMessage(msg);
             switch (msg.what) {
                 case 0:
-                    commTask.cancel(true);
-                    commTask = new CommTask(MainActivity.this);
-                    commTask.execute(1, COMM_STOP_OUTPUT, COMM_READ_DEV_ID);
+                    if (!commTask.running) {
+                        commTask.cancel(true);
+                        commTask = new CommTask(MainActivity.this);
+                        if (dataViewModel.devId.isEmpty())
+                            commTask.execute(1, COMM_STOP_OUTPUT, COMM_READ_DEV_ID);
+                        else if (dataViewModel.devVer.equals("xxxx"))
+                            commTask.execute(1, COMM_STOP_OUTPUT, COMM_READ_DEV_VER);
+                        else if (dataViewModel.devVer.isEmpty())
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    updateDialog();
+                                }
+                            });
+                            //commTask.execute(1, COMM_STOP_OUTPUT, COMM_READ_DEV_VER);
+                        else
+                            commTask.execute(1, COMM_STOP_OUTPUT);
+                    }
                     break;
                 case 131:
                     if (msg.arg1 == 1) {
@@ -271,6 +287,22 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
         dataViewModel.battStatus = 0;
         dataViewModel.fileLoaded = false;
         dataViewModel.ver = serialPortUtils.comPort;
+        dataViewModel.devVer = "xxxx";
+        dataViewModel.devId = "";
+//        try {
+//            InputStream is = getAssets().open("code.bin");
+//            int fileLen = ((is.available() + 7) / 8) * 8;
+//            byte[] fileData = new byte[12];
+//            if (fileLen > 0x600) {
+//                is.skip(0x500);
+//                is.read(fileData, 0, 12);
+//                is.close();
+//                dataViewModel.devVer = new String(fileData);
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+
         //comm = Comm.getInstance(this);
         //comm.setDataViewModel(dataViewModel);
 
@@ -341,7 +373,7 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
         observVolt = new ObservVolt(this, frVolt, getSupportFragmentManager());
         dataViewModel.volt.observe(this, observVolt);
         commTask = new CommTask(this);
-        commTask.execute(1, COMM_READ_DEV_ID, COMM_GET_BATT);
+        commTask.execute(1, COMM_READ_DEV_ID, COMM_READ_DEV_VER, COMM_GET_BATT);
         dataViewModel.volt.setValue(100);
         firstBoot = true;
 
@@ -372,7 +404,9 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
         keyReceiver = new KeyReceiver(this, handler, dataViewModel);
         //     keyThread.start();
 
-
+        initXHttp();
+        initOKHttpUtils();
+        initUpdate();
     }
 
 
@@ -427,7 +461,7 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
 
         } else {
             serialPortUtils.onKeyDataListener = null;
-            commTask.cancel(true);
+            //commTask.cancel(true);
         }
 
         if (battTimer != null) {
@@ -804,9 +838,86 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
                     }
                     waitPublish = false;
                     break;
+                case COMM_READ_DEV_VER:
+                    if (values[1] == 1) {
+                        byte[] b = new byte[12];
+                        b[0] = (byte) (values[2] & 0x0ff);
+                        b[1] = (byte) ((values[2] >> 8) & 0x0ff);
+                        b[2] = (byte) ((values[2] >> 16) & 0x0ff);
+                        b[3] = (byte) ((values[2] >> 24) & 0x0ff);
+                        b[4] = (byte) (values[3] & 0x0ff);
+                        b[5] = (byte) ((values[3] >> 8) & 0x0ff);
+                        b[6] = (byte) ((values[3] >> 16) & 0x0ff);
+                        b[7] = (byte) ((values[3] >> 24) & 0x0ff);
+                        b[8] = (byte) (values[4] & 0x0ff);
+                        b[9] = (byte) ((values[4] >> 8) & 0x0ff);
+                        b[10] = (byte) ((values[4] >> 16) & 0x0ff);
+                        b[11] = (byte) ((values[4] >> 24) & 0x0ff);
+                        dataViewModel.devVer = new String(b);
+                        try {
+                            InputStream is = getAssets().open("code.bin");
+                            int fileLen = ((is.available() + 7) / 8) * 8;
+                            byte[] fileData = new byte[12];
+                            if (fileLen > 0x600) {
+                                is.skip(0x500);
+                                is.read(fileData, 0, 12);
+                                is.close();
+                                String v = new String(fileData);
+                                if (!v.equals(dataViewModel.devVer))
+                                    dataViewModel.devVer = "";
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        waitPublish = false;
+                    }
+                    break;
+                case COMM_UPDATE:
+                    if (values[1] == 1) {
+                        if (values[3] == 0) {
+                            runOnUiThread(new Runnable() {
+                                @SuppressLint("DefaultLocale")
+                                @Override
+                                public void run() {
+                                    try {
+                                        infoDialog.progressBar.setMax(fileLen);
+                                        infoDialog.progressBar.setProgress(values[2]);
+//                                        infoDialog.setMessageTxt(String.format("升级中（%d/%d)", values[2], fileLen));
+                                        //    infoDialog.setMessageTxt("更新固件");
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+
+                                }
+                            });
+                        }
+                        if (values[3] == 2) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    infoDialog.setMessageTxt("升级完成！");
+                                    infoDialog.setCancelable(true);
+                                }
+                            });
+                        }
+                    }
+                    waitPublish = false;
+                    break;
+                case COMM_RESET:
+                    if (values[1] == -1) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                infoDialog.setMessageTxt("升级失败！");
+                                infoDialog.setCancelable(true);
+                            }
+                        });
+                    }
+                    break;
 
             }
-            super.onProgressUpdate(values);
+            //super.onProgressUpdate(values);
         }
 
         @Override
@@ -928,5 +1039,65 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
         }
     }
 
+    private void initUpdate() {
+        XUpdate.get()
+                .debug(true)
+                .isWifiOnly(false)                                               //默认设置只在wifi下检查版本更新
+                .isGet(true)                                                    //默认设置使用get请求检查版本
+                .isAutoMode(false)                                              //默认设置非自动模式，可根据具体使用配置
+                .param("versionCode", UpdateUtils.getVersionCode(this))  //设置默认公共请求参数
+                .param("appKey", getPackageName())
+                .setOnUpdateFailureListener(new OnUpdateFailureListener() { //设置版本更新出错的监听
+                    @Override
+                    public void onFailure(UpdateError error) {
+                        error.printStackTrace();
+                        if (error.getCode() == CHECK_NO_NEW_VERSION) {          //对不同错误进行处理
+                            Toast.makeText(getApplicationContext(), "不需要更新！",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                })
+                .supportSilentInstall(false)                                     //设置是否支持静默安装，默认是true
+                .setIUpdateHttpService(new OKHttpUpdateHttpService())           //这个必须设置！实现网络请求功能。
+                .init(this.getApplication());                                          //这个必须初始化
+
+    }
+
+    private void initXHttp() {
+        XHttpSDK.init(this.getApplication());   //初始化网络请求框架，必须首先执行
+        XHttpSDK.debug("XHttp");  //需要调试的时候执行
+        XHttp.getInstance().setTimeout(20000);
+    }
+
+    private void initOKHttpUtils() {
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(20000L, TimeUnit.MILLISECONDS)
+                .readTimeout(20000L, TimeUnit.MILLISECONDS)
+                .build();
+        OkHttpUtils.initClient(okHttpClient);
+    }
+
+    private void updateDialog() {
+        try {
+            InputStream is = getAssets().open("code.bin");
+            fileLen = ((is.available() + 7) / 8) * 8;
+            fileData = new byte[fileLen];
+            if (is.read(fileData) != 0) {
+                dataViewModel.devVer = "xxxx";
+                infoDialog = new InfoDialog();
+                infoDialog.setTitle("请勿关闭电");
+                infoDialog.setMessage("升级固件");
+                infoDialog.setProgressEnable(true);
+                infoDialog.setCancelable(false);
+                infoDialog.show(getSupportFragmentManager(), "info");
+                commTask.cancel(true);
+                commTask = new CommTask(MainActivity.this);
+                commTask.setFileData(fileData, fileLen);
+                commTask.execute(4, COMM_RESET, COMM_DELAY, COMM_DELAY, COMM_UPDATE, COMM_DELAY, COMM_DELAY, COMM_RESET);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 }
