@@ -121,7 +121,7 @@
                 <FrameLayout
                     android:id="@+id/layout_set_id"
                     android:layout_width="match_parent"
-                    android:layout_height="120dp"
+                    android:layout_height="100dp"
                     android:background="@drawable/custom_btn"
                     android:clickable="true"
                     android:focusable="true"
@@ -158,7 +158,7 @@
                 <FrameLayout
                     android:id="@+id/layout_daily_data"
                     android:layout_width="match_parent"
-                    android:layout_height="120dp"
+                    android:layout_height="100dp"
                     android:background="@drawable/custom_btn"
                     android:clickable="true"
                     android:focusable="true"
@@ -195,7 +195,7 @@
                 <FrameLayout
                     android:id="@+id/layout_test_delay"
                     android:layout_width="match_parent"
-                    android:layout_height="120dp"
+                    android:layout_height="100dp"
                     android:background="@drawable/custom_btn"
                     android:clickable="true"
                     android:focusable="true"
@@ -356,7 +356,7 @@
                     android:id="@+id/layout_make"
                     android:visibility="gone"
                     android:layout_width="match_parent"
-                    android:layout_height="120dp"
+                    android:layout_height="100dp"
                     android:background="@drawable/custom_btn"
                     android:clickable="true"
                     android:focusable="true"
@@ -383,6 +383,39 @@
                         android:shadowDy="2"
                         android:shadowRadius="1"
                         android:text="9.生成合同"
+                        android:textColor="@color/colorPrimary"
+                        android:textSize="28sp" />
+                </FrameLayout>
+                <FrameLayout
+                    android:id="@+id/layout_selftest"
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp"
+                    android:background="@drawable/custom_btn"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="horizontal"
+                    android:paddingTop="24dp"
+                    android:paddingBottom="24dp">
+
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="32dp"
+                        android:tint="@color/main3"
+
+                        app:srcCompat="@mipmap/ic_update_white_48dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center"
+                        android:shadowColor="#20000000"
+                        android:shadowDx="2"
+                        android:shadowDy="2"
+                        android:shadowRadius="1"
+                        android:text="8.自检程序"
                         android:textColor="@color/colorPrimary"
                         android:textSize="28sp" />
                 </FrameLayout>

@@ -47,15 +47,14 @@ import com.example.xdyblaster.fragment.FragmentSetDelay;
 import com.example.xdyblaster.fragment.FragmentSort;
 import com.example.xdyblaster.fragment.FragmentVolt;
 import com.example.xdyblaster.util.CommDetonator;
-import com.example.xdyblaster.util.DailyData;
 import com.example.xdyblaster.util.DataViewModel;
 import com.example.xdyblaster.util.DetonatorData;
 import com.example.xdyblaster.util.DetonatorDataComparator;
 import com.example.xdyblaster.util.FileFunc;
 import com.example.xdyblaster.util.InfoDialog;
-import com.example.xdyblaster.util.KeyReceiver;
 import com.example.xdyblaster.util.ObservOverCurrent;
 import com.example.xdyblaster.util.ObservVolt;
+import com.example.xdyblaster.util.SharedPreferencesUtils;
 import com.example.xdyblaster.util.UuidData;
 
 import java.io.File;
@@ -75,7 +74,6 @@ import me.jessyan.autosize.internal.CustomAdapt;
 import utils.SerialPortUtils;
 
 import static android.view.KeyEvent.KEYCODE_POWER;
-import static android.view.KeyEvent.KEYCODE_UNKNOWN;
 import static com.example.xdyblaster.MainActivity.actionScan;
 import static com.example.xdyblaster.MainActivity.actionStartScan;
 import static com.example.xdyblaster.util.AppConstants.ACTION_SCAN_INIT;
@@ -125,6 +123,14 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
     Button btDetonator;
     @BindView(R.id.tvDelay)
     TextView tvDelay;
+    @BindView(R.id.tvID)
+    TextView tvID;
+    @BindView(R.id.tvTime)
+    TextView tvTime;
+    @BindView(R.id.tvRow)
+    TextView tvRow;
+    @BindView(R.id.tvHole)
+    TextView tvHole;
 
 
     private DataViewModel dataViewModel;
@@ -509,7 +515,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
         super.onWindowFocusChanged(hasFocus);
     }
 
-    @OnClick({R.id.btSetting, R.id.btEdit, R.id.btArea, R.id.btDetonator})
+    @OnClick({R.id.btSetting, R.id.btEdit, R.id.btArea, R.id.btDetonator, R.id.tvID, R.id.tvTime, R.id.tvRow, R.id.tvHole})
     public void onViewClicked(View view) {
         if (System.currentTimeMillis() < keyTime + 200)
             return;
@@ -771,9 +777,43 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
                     }
                 });
                 break;
+            case R.id.tvID:
+                resetSortType(1);
+                break;
+            case R.id.tvTime:
+                resetSortType(0);
+                break;
+            case R.id.tvRow:
+                resetSortType(2);
+                break;
+            case R.id.tvHole:
+                resetSortType(3);
+                break;
 
         }
     }
+
+    public void resetSortType(int t) {
+        sortUpDown = (int) SharedPreferencesUtils.getParam(this, "sort up down", 0);
+        if (t == (int) SharedPreferencesUtils.getParam(this, "sort type", 0)) {
+            if (sortUpDown == 0)
+                sortUpDown = 1;
+            else
+                sortUpDown = 0;
+            SharedPreferencesUtils.setParam(this, "sort up down", sortUpDown);
+        }
+        sortType = t;
+        SharedPreferencesUtils.setParam(this, "sort type", sortType);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Collections.sort(dataViewModel.detonatorDatas, new DetonatorDataComparator(sortType, sortUpDown));
+                dataViewModel.dataChanged = true;
+                reStart();
+            }
+        });
+    }
+
 
     public void showPopupMenuOther(View view, String[] popupStr, AdapterView.OnItemClickListener onItemClickListener) {
         if (popupMenuOther != null && popupMenuOther.isShowing()) {
@@ -948,8 +988,9 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
             detonatorTime = dataViewModel.detonatorDatas.get(i - 1).getBlasterTime() + detonatorDelay;
             if (detonatorTime < 0)
                 detonatorTime = 0;
+            detonatorHole = -1;
             for (DetonatorData d : dataViewModel.detonatorDatas) {
-                if (d.getHoleNum() > detonatorHole)
+                if ((d.getRowNum() == detonatorArea) && (d.getHoleNum() > detonatorHole))
                     detonatorHole = d.getHoleNum();
             }
             detonatorHole++;
@@ -1232,8 +1273,18 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
             Intent intent = new Intent("same.uuid");
             sendBroadcast(intent);
         }
+        else
+        {
+            try {
+                mMediaPlayer.start();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
         return same;
     }
+
 
     @SuppressLint("StaticFieldLeak")
     private class CommTask extends CommDetonator {

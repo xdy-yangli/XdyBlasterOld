@@ -24,11 +24,7 @@ import com.example.xdyblaster.R;
 import com.example.xdyblaster.util.CommDetonator;
 import com.example.xdyblaster.util.DataViewModel;
 import com.example.xdyblaster.util.InfoDialog;
-import com.example.xdyblaster.util.KeyReceiver;
 
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 
 import butterknife.BindView;
@@ -41,7 +37,6 @@ import static com.example.xdyblaster.util.CommDetonator.COMM_CALC_VOLTAGE;
 import static com.example.xdyblaster.util.CommDetonator.COMM_DELAY;
 import static com.example.xdyblaster.util.CommDetonator.COMM_RESET;
 import static com.example.xdyblaster.util.CommDetonator.COMM_UPDATE;
-import static com.example.xdyblaster.util.FileFunc.getSDPath;
 import static com.example.xdyblaster.util.FileFunc.tintDrawable;
 
 public class SystemActivity extends AppCompatActivity implements CustomAdapt {
@@ -64,6 +59,8 @@ public class SystemActivity extends AppCompatActivity implements CustomAdapt {
     FrameLayout layoutDailyData;
     @BindView(R.id.layout_test_delay)
     FrameLayout layoutTestDelay;
+    @BindView(R.id.layout_selftest)
+    FrameLayout layoutSelftest;
     private DataViewModel dataViewModel;
     private SerialPortUtils serialPortUtils;
 
@@ -296,7 +293,7 @@ public class SystemActivity extends AppCompatActivity implements CustomAdapt {
     }
 
 
-    @OnClick({R.id.layout_volt, R.id.layout_update, R.id.layout_encode, R.id.layout_tester, R.id.layout_ble, R.id.layout_make, R.id.layout_set_id, R.id.layout_daily_data, R.id.layout_test_delay})
+    @OnClick({R.id.layout_volt, R.id.layout_update, R.id.layout_encode, R.id.layout_tester, R.id.layout_ble, R.id.layout_make, R.id.layout_set_id, R.id.layout_daily_data, R.id.layout_test_delay, R.id.layout_selftest})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.layout_volt:
@@ -360,6 +357,10 @@ public class SystemActivity extends AppCompatActivity implements CustomAdapt {
                 break;
             case R.id.layout_test_delay:
                 intent = new Intent(SystemActivity.this, DelayActivity.class);
+                startActivity(intent);
+                break;
+            case R.id.layout_selftest:
+                intent = new Intent(SystemActivity.this, SelfTestActivity.class);
                 startActivity(intent);
                 break;
         }

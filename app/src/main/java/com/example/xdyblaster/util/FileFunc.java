@@ -944,6 +944,8 @@ public class FileFunc {
             int m = b[3] - '0';
             m = m * 10 + (b[4] - '0');
             m = m - 1;
+            if (m < 0 || m > 11)
+                m = 0;
             b[4] = (byte) monthChar[m];
             b[3] = b[2];
             b[2] = '2';

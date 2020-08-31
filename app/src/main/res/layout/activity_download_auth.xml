@@ -10,10 +10,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="50dp"
-
             android:background="@color/main2">
 
             <TextView
@@ -32,235 +32,302 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
-
-            <LinearLayout
-                android:id="@+id/lt_htid"
+            <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="16dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="合同ID"
-                    android:textColor="@color/colorBlack1"
-                    android:textSize="24sp" />
-
-                <EditText
-                    android:id="@+id/etHtid"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="4dp"
-                    android:layout_weight="1"
-                    android:ems="20"
-                    android:gravity="center"
-                    android:textSize="22sp" />
-
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/lt_xmbh"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="16dp"
-                android:orientation="horizontal">
-
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="项目编号"
-                    android:textColor="@color/colorBlack1"
-                    android:textSize="24sp" />
-
-                <EditText
-                    android:id="@+id/etXmbh"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="4dp"
-                    android:layout_weight="1"
-                    android:ems="20"
-                    android:gravity="center"
-                    android:textSize="22sp" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/lt_dwdm"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="16dp"
-
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="单位代码"
-                    android:textColor="@color/colorBlack1"
-                    android:textSize="24sp" />
-
-                <EditText
-                    android:id="@+id/etDwdm"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="4dp"
-                    android:layout_weight="1"
-                    android:ems="20"
-                    android:gravity="center"
-                    android:textSize="22sp" />
-
-
-            </LinearLayout>
-            <LinearLayout
-                android:id="@+id/lt_people"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="16dp"
-
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="起爆人员"
-                    android:textColor="@color/colorBlack1"
-                    android:textSize="24sp" />
-
-                <EditText
-                    android:id="@+id/etPeople"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="4dp"
-                    android:layout_weight="1"
-                    android:ems="20"
-                    android:gravity="center"
-                    android:textSize="22sp" />
-
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/lt_position"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="16dp"
-
-                android:orientation="horizontal">
+                >
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="经度"
-                        android:textColor="@color/colorBlack1"
-                        android:textSize="24sp" />
 
-                    <EditText
-                        android:id="@+id/etJd"
-                        android:layout_width="0dp"
+                    <LinearLayout
+                        android:id="@+id/lt_name"
+                        android:visibility="gone"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="4dp"
-                        android:layout_weight="1"
-                        android:ems="20"
-                        android:inputType="numberDecimal"
-                        android:gravity="center"
-                        android:textSize="22sp" />
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="16dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="名称"
+                            android:textColor="@color/colorBlack1"
+                            android:textSize="24sp" />
+
+                        <EditText
+                            android:id="@+id/etName"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="4dp"
+                            android:layout_weight="1"
+                            android:ems="20"
+                            android:gravity="center"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:textSize="22sp" />
+
+                        <Button
+                            android:id="@+id/btHistory"
+                            style="@style/ButtonText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            android:layout_marginEnd="4dp"
+                            android:background="@drawable/blue_btn"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:text="历史记录"
+                            android:textColor="@color/white"
+                            android:textSize="20sp" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/lt_htid"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="16dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="合同ID"
+                            android:textColor="@color/colorBlack1"
+                            android:textSize="24sp" />
+
+                        <EditText
+                            android:id="@+id/etHtid"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="4dp"
+                            android:layout_weight="1"
+                            android:ems="20"
+                            android:gravity="center"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:textSize="22sp" />
+
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/lt_xmbh"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="16dp"
+                        android:orientation="horizontal">
+
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="项目编号"
+                            android:textColor="@color/colorBlack1"
+                            android:textSize="24sp" />
+
+                        <EditText
+                            android:id="@+id/etXmbh"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="4dp"
+                            android:layout_weight="1"
+                            android:ems="20"
+                            android:gravity="center"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:textSize="22sp" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/lt_dwdm"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="16dp"
+
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="单位代码"
+                            android:textColor="@color/colorBlack1"
+                            android:textSize="24sp" />
+
+                        <EditText
+                            android:id="@+id/etDwdm"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="4dp"
+                            android:layout_weight="1"
+                            android:ems="20"
+                            android:gravity="center"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:textSize="22sp" />
+
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/lt_people"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="16dp"
+
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="起爆人员"
+                            android:textColor="@color/colorBlack1"
+                            android:textSize="24sp" />
+
+                        <EditText
+                            android:id="@+id/etPeople"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="4dp"
+                            android:layout_weight="1"
+                            android:ems="20"
+                            android:gravity="center"
+                            android:inputType="text"
+                            android:maxLines="1"
+                            android:textSize="22sp" />
+
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/lt_position"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="16dp"
+
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="经度"
+                                android:textColor="@color/colorBlack1"
+                                android:textSize="24sp" />
+
+                            <EditText
+                                android:id="@+id/etJd"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                android:layout_weight="1"
+                                android:ems="20"
+                                android:gravity="center"
+                                android:inputType="numberDecimal"
+                                android:textSize="22sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="horizontal">
+
+                            <TextView
+
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="纬度"
+                                android:textColor="@color/colorBlack1"
+                                android:textSize="24sp" />
+
+                            <EditText
+                                android:id="@+id/etWd"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="4dp"
+                                android:layout_weight="1"
+                                android:ems="20"
+                                android:gravity="center"
+                                android:inputType="numberDecimal"
+                                android:textSize="22sp" />
+                        </LinearLayout>
+
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="16dp"
+
+                        android:orientation="horizontal">
+
+
+                        <CheckBox
+                            android:id="@+id/cbTester"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="厂内试爆"
+                            android:textSize="24sp"
+                            android:visibility="gone" />
+
+                        <TextView
+                            android:id="@+id/tvTotal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center|right"
+                            android:text="总数：0"
+                            android:textSize="24sp" />
+                    </LinearLayout>
+
+
+
+
                 </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:orientation="horizontal">
-
-                    <TextView
-
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="纬度"
-                        android:textColor="@color/colorBlack1"
-                        android:textSize="24sp" />
-
-                    <EditText
-                        android:id="@+id/etWd"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="4dp"
-                        android:layout_weight="1"
-                        android:inputType="numberDecimal"
-                        android:ems="20"
-                        android:gravity="center"
-                        android:textSize="22sp" />
-                </LinearLayout>
-
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="16dp"
-
-                android:orientation="horizontal">
-
-
-                <CheckBox
-                    android:id="@+id/cbTester"
-                    android:visibility="gone"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="厂内试爆"
-                    android:textSize="24sp" />
-
-                <TextView
-                    android:id="@+id/tvTotal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center|right"
-                    android:text="总数：0"
-                    android:textSize="24sp" />
-            </LinearLayout>
-
-
+            </ScrollView>
 
             <ListView
                 android:id="@+id/listLg"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="0dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="16dp"
-                android:layout_marginBottom="10dp">
+                android:layout_marginBottom="10dp"
+                android:layout_weight="1">
 
             </ListView>
-
-
         </LinearLayout>
 
         <LinearLayout
@@ -301,6 +368,7 @@
                 android:text="删除"
                 android:textColor="@color/white"
                 android:textSize="24sp" />
+
             <Button
                 android:id="@+id/btImport"
                 style="@style/ButtonText"

@@ -7,10 +7,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -39,7 +41,6 @@ import com.example.xdyblaster.ble.BleManager;
 import com.example.xdyblaster.fragment.FragmentVolt;
 import com.example.xdyblaster.http.OKHttpUpdateHttpService;
 import com.example.xdyblaster.system.BleActivity;
-import com.example.xdyblaster.system.SystemActivity;
 import com.example.xdyblaster.util.CommDetonator;
 import com.example.xdyblaster.util.DataViewModel;
 import com.example.xdyblaster.util.DetonatorSetting;
@@ -236,7 +237,8 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
+        Log.e("start", "Boot 开机自动启动");
+        dataViewModel = new ViewModelProvider(this).get(DataViewModel.class);
         serialPortUtils = SerialPortUtils.getInstance(this);
         SDKInitializer.initialize(getApplicationContext());
 
@@ -278,7 +280,7 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
         serialPortUtils.setOnDataReceiveListener(this);
         serialPortUtils.onKeyDataListener = this;
         serialPortUtils.mActivity = this;
-        dataViewModel = new ViewModelProvider(this).get(DataViewModel.class);
+
         dataViewModel.dataChanged = false;
         dataViewModel.overCurrent.setValue(0);
         dataViewModel.romErr.setValue(0);
@@ -484,9 +486,23 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
         }
     }
 
+    public static boolean checkPermission(Activity activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && !Settings.canDrawOverlays(activity)) {
+            Toast.makeText(activity, "当前无权限，请授权", Toast.LENGTH_SHORT).show();
+            activity.startActivityForResult(
+                    new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:" + activity.getPackageName())), 0);
+            return false;
+        }
+        return true;
+    }
+
     @OnClick({R.id.layout_single_test, R.id.layout_delay_prj, R.id.layout_net, R.id.layout_authorize, R.id.layout_setting, R.id.layout_charge})
     public void onViewClicked(View view) {
         int viewId = view.getId();
+        if (!checkPermission(this))
+            return;
         if (viewId != R.id.layout_authorize && viewId != R.id.layout_setting) {
             if (dataViewModel.battPercent < 30) {
                 InfoDialog battInfo = new InfoDialog();
@@ -1100,4 +1116,7 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
         }
     }
 
+
 }
+
+

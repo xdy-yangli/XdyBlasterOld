@@ -22,8 +22,8 @@ android {
         applicationId "com.example.xdyblaster"
         minSdkVersion 24
         targetSdkVersion 28
-        versionCode 1
-        versionName "1.0"
+        versionCode 112
+        versionName "1.1.2"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         sourceSets {
             main {

@@ -9,7 +9,8 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.CAMERA" /> <!-- <uses-permission android:name="android.permission.WAKE_LOCK" /> -->
+    <uses-permission android:name="android.permission.CAMERA" />
+     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -40,6 +41,9 @@
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <activity android:name=".system.SelfTestActivity"></activity>
+        <activity android:name=".StartActivity" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.lxtwsw.weather.fileprovider"
@@ -50,8 +54,7 @@
                 android:resource="@xml/filepath" />
         </provider>
 
-        <activity android:name=".system.DelayActivity"/>
-<!--        <activity android:name=".FaceRegisterActivity" />-->
+        <activity android:name=".system.DelayActivity" /> <!-- <activity android:name=".FaceRegisterActivity" /> -->
         <activity android:name=".DownloadAuthActivity" />
         <activity android:name=".system.DailyActivity" />
         <activity android:name=".ResultDataActivity" />
@@ -61,8 +64,7 @@
         <activity android:name=".system.SystemActivity" />
         <activity android:name=".LgDataActivity" />
         <activity android:name=".MapActivity" />
-        <activity android:name=".AuthViewActivity" />
-<!--        <activity android:name=".RegisterAndRecognizeActivity" />-->
+        <activity android:name=".AuthViewActivity" /> <!-- <activity android:name=".RegisterAndRecognizeActivity" /> -->
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

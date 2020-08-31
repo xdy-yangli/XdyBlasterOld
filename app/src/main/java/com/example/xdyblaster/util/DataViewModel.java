@@ -57,7 +57,8 @@ public class DataViewModel extends AndroidViewModel {
     public int commErr = 0, countDown = 0, overStop = 0;
     public int defaultVolt;
     public int systemCount = 0;
-    public  int battPercent;
+    public int battPercent;
+    public boolean top = false;
 
 
     public String getFileName() {

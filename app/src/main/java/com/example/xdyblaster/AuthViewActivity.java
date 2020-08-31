@@ -1,5 +1,6 @@
 package com.example.xdyblaster;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.hardware.SensorManager;
 import android.os.Bundle;
@@ -84,6 +85,7 @@ public class AuthViewActivity extends AppCompatActivity implements CustomAdapt {
     ArrayAdapter<String> arrayAdapter;
     List<Zbqy> listZbqy = new ArrayList<>();
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -153,8 +155,8 @@ public class AuthViewActivity extends AppCompatActivity implements CustomAdapt {
                         if (tmp1.equals("json")) {
                             tmp1 = tmp0.substring(0, len);
                             listFileName.add(tmp1);
-                            if (tmp1.equals(str))
-                                k = j;
+//                            if (tmp1.equals(str))
+//                                k = j;
                             j++;
                         }
                     }
@@ -168,14 +170,19 @@ public class AuthViewActivity extends AppCompatActivity implements CustomAdapt {
         listAuth.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         if (listAuth.getCount() != 0) {
             {
-                int finalK = k;
+                int finalK = 0;
+                for (i = 0; i < listFileName.size(); i++) {
+                    if (str.equals(listFileName.get(i)))
+                        finalK = i;
+                }
+                int finalK1 = finalK;
                 listAuth.post(new Runnable() {
                     @Override
                     public void run() {
                         if (listAuth.getCount() != 0) {
-                            listAuth.setItemChecked(finalK, true);
-                            listAuth.setSelection(finalK);
-                            setMapPosition(finalK);
+                            listAuth.setItemChecked(finalK1, true);
+                            listAuth.setSelection(finalK1);
+                            setMapPosition(finalK1);
                         }
                     }
                 });

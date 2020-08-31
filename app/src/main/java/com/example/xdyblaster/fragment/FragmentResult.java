@@ -162,6 +162,8 @@ public class FragmentResult extends DialogFragment {
         int color;
         for (DetonatorData d : dataViewModel.detonatorDatas) {
             color = d.getColor();
+            if (color != 0x1f)
+                count++;
             if (color != 0)
                 total++;
             switch (color) {
@@ -193,7 +195,7 @@ public class FragmentResult extends DialogFragment {
         tvHole.setText(String.valueOf(holeErr));
         tvTime.setText(String.valueOf(timeErr));
         tvOutline.setText(String.valueOf(outline));
-        tvTotal.setText(String.valueOf(tvTotal));
+        tvTotal.setText(String.valueOf(count));
 
 //        if(!mRealm.isInTransaction()) {
 //            mRealm.executeTransaction(new Realm.Transaction() {

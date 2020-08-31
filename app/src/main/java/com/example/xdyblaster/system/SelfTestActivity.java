@@ -1,4 +1,4 @@
-package com.example.xdyblaster;
+package com.example.xdyblaster.system;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -24,8 +24,8 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.example.xdyblaster.Adapter.DetonatorAdapter;
 import com.example.xdyblaster.Adapter.SectionsPagerAdapter;
+import com.example.xdyblaster.R;
 import com.example.xdyblaster.fragment.FragmentData;
-import com.example.xdyblaster.fragment.FragmentEdit;
 import com.example.xdyblaster.fragment.FragmentLoad;
 import com.example.xdyblaster.fragment.FragmentResult;
 import com.example.xdyblaster.fragment.FragmentVolt;
@@ -34,10 +34,8 @@ import com.example.xdyblaster.util.DataViewModel;
 import com.example.xdyblaster.util.DetonatorData;
 import com.example.xdyblaster.util.FileFunc;
 import com.example.xdyblaster.util.InfoDialog;
-import com.example.xdyblaster.util.KeyReceiver;
 import com.example.xdyblaster.util.ObservOverCurrent;
 import com.example.xdyblaster.util.ObservVolt;
-import com.example.xdyblaster.util.SharedPreferencesUtils;
 import com.example.xdyblaster.util.UuidData;
 
 import java.util.ArrayList;
@@ -67,7 +65,6 @@ import static com.example.xdyblaster.util.AppConstants.BLASTER_TIMER_DELAY;
 import static com.example.xdyblaster.util.CommDetonator.COMM_CHECK_NET;
 import static com.example.xdyblaster.util.CommDetonator.COMM_DELAY;
 import static com.example.xdyblaster.util.CommDetonator.COMM_DETONATE_PROGRESS;
-import static com.example.xdyblaster.util.CommDetonator.COMM_DOWNLOAD_DATA;
 import static com.example.xdyblaster.util.CommDetonator.COMM_GET_BATT;
 import static com.example.xdyblaster.util.CommDetonator.COMM_GET_ID_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_GET_UUID_BUFFER;
@@ -80,10 +77,7 @@ import static com.example.xdyblaster.util.CommDetonator.COMM_WAIT_PUBLISH;
 import static com.example.xdyblaster.util.FileFunc.getUuidData;
 import static com.example.xdyblaster.util.FileFunc.loadDetonatorFile;
 
-public class NetActivity extends AppCompatActivity implements CustomAdapt, DetonatorAdapter.OnItemSelectedListener, SerialPortUtils.OnKeyDataListener {
-
-    @BindView(R.id.view_pager)
-    ViewPager viewPager;
+public class SelfTestActivity extends AppCompatActivity implements CustomAdapt, DetonatorAdapter.OnItemSelectedListener, SerialPortUtils.OnKeyDataListener {
     @BindView(R.id.tvTitle)
     TextView tvTitle;
     @BindView(R.id.tvArea)
@@ -94,13 +88,22 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
     TextView tvID;
     @BindView(R.id.tvTime)
     TextView tvTime;
+    @BindView(R.id.tvRow)
+    TextView tvRow;
+    @BindView(R.id.tvHole)
+    TextView tvHole;
+    @BindView(R.id.view_pager)
+    ViewPager viewPager;
     @BindView(R.id.bt_start)
     Button btStart;
     @BindView(R.id.bt_view)
     Button btView;
     @BindView(R.id.bt_download)
     Button btDownload;
-
+    @BindView(R.id.tvCorrect)
+    TextView tvCorrect;
+    @BindView(R.id.tvError)
+    TextView tvError;
     private DataViewModel dataViewModel;
     private List<FragmentData> fragments = new ArrayList<>();
     private SectionsPagerAdapter sectionsPagerAdapter;
@@ -110,6 +113,8 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
     private boolean firstBoot;
     private SerialPortUtils serialPortUtils;
     public int newDetonator;
+    public int errCount;
+    public int checkError, checkCorrect;
     @SuppressLint("HandlerLeak")
     Handler handler = new Handler() {
         @SuppressLint("HandlerLeak")
@@ -120,15 +125,13 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
                 case 0:
                     if (battEnable && commEnable) {
                         commTask.cancel(true);
-                        commTask = new CommTask(NetActivity.this);
+                        commTask = new CommTask(SelfTestActivity.this);
                         commTask.execute(1, COMM_GET_BATT);
 
                     }
                     break;
                 case 131:
                 case 132:
-                    if (msg.arg1 == 1 && hasFocus)
-                        btStart.performClick();
                     break;
             }
         }
@@ -158,7 +161,7 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.activity_net);
+        setContentView(R.layout.activity_self_test);
         ButterKnife.bind(this);
 
         vpNum = 0;
@@ -211,7 +214,7 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
             @Override
             public void onChanged(@Nullable Integer integer) {
                 if (showResult) {
-                    btView.performClick();
+                    //         btView.performClick();
                     showResult = false;
                 }
             }
@@ -229,9 +232,264 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
                 }
             }
         });
+        checkCorrect = 0;
+        checkError = 0;
+        setCheckText();
 
     }
 
+    @SuppressLint("DefaultLocale")
+    public void setCheckText() {
+        tvCorrect.setText(String.format("正确: %d", checkCorrect));
+        tvError.setText(String.format("错误: %d", checkError));
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    private class CommTask extends CommDetonator {
+
+        public CommTask(Context context) {
+            this.serialPortUtils = SerialPortUtils.getInstance(context);
+            this.dataViewModel = new ViewModelProvider(serialPortUtils.mActivity).get(DataViewModel.class);
+            this.serialPortUtils.sendStop = true;
+            commEnable = false;
+        }
+
+
+        @SuppressLint("DefaultLocale")
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            int i;
+            float p;
+            switch (values[0]) {
+                case COMM_PUT_ID_BUFFER:
+                    if (values[1] == 1) {
+                        if (infoDialog.progressBar != null) {
+                            infoDialog.progressBar.setMax(values[3]);
+                            infoDialog.progressBar.setProgress(values[2]);
+                            infoDialog.setMessageTxt(String.format("传输数据(%d/%d)", values[2], values[3]));
+                        }
+                    }
+                    break;
+                case COMM_CHECK_NET:
+                    infoDialog.progressBar.setMax(dataViewModel.detonatorDatas.size());
+                    infoDialog.progressBar.setMax(17);
+                    infoDialog.progressBar.setProgress(0);
+                    break;
+                case COMM_DETONATE_PROGRESS:
+                    try {
+
+                        i = (values[2] >> 24) & 0x0ff;
+                        int j = (values[2] >> 16) & 0x0ff;
+                        int d = values[2] & 0x0ffff;
+                        int s = values[4] & 0x0ffff;
+                        switch (i) {
+                            case 0:
+                            case 1:
+                                infoDialog.progressBar.setProgress(j);
+                                break;
+                            case 2:
+                            case 3:
+                            case 4:
+                                infoDialog.progressBar.setProgress(16);
+                                break;
+                            case 5:
+                                infoDialog.progressBar.setProgress(17);
+                                newDetonator = d;
+                                breaking = true;
+                                break;
+                        }
+                        infoDialog.setMessageTxt(String.format("扫描网络 %d", s + d));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+
+                case COMM_GET_ID_BUFFER:
+                    if (values[1] == 1) {
+                        try {
+                            p = values[2] * 100;
+                            p = p / values[3];
+                            infoDialog.progressBar.setMax(values[3]);
+                            infoDialog.progressBar.setProgress(values[2]);
+                            infoDialog.setMessageTxt(String.format("读取数据(%d/%d)", values[2], values[3]));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        if (values[2].equals(values[3]) || values[3].equals(0)) {
+                            //               infoDialog.dismiss();
+                            int color;
+                            errCount = 0;
+                            for (i = 0; i < values[3]; i++) {
+                                color = 0;
+//                                if (dataViewModel.detonatorDatas.get(i).getId() == 0)
+//                                    continue;
+                                if ((dataViewModel.statusBuffer[i] & 0x000000ff) != 1)
+                                    color = 0x01f;
+                                else {
+                                    int a, h, t;
+                                    h = dataViewModel.areaBuffer[i] & 0x0ffff;
+                                    a = h / 1000;
+                                    h = h - a * 1000;
+                                    t = (dataViewModel.areaBuffer[i] >> 16) & 0x0ffff;
+                                    if (h != dataViewModel.detonatorDatas.get(i).getHoleNum()) {
+                                        color = 0x01;
+                                        dataViewModel.detonatorDatas.get(i).setHoleNumErr(h);
+                                    }
+                                    if (a != dataViewModel.detonatorDatas.get(i).getRowNum()) {
+                                        color += 0x02;
+                                        dataViewModel.detonatorDatas.get(i).setRowNumErr(a);
+                                    }
+                                    if (t != (dataViewModel.detonatorDatas.get(i).getBlasterTime() + BLASTER_TIMER_DELAY)) {
+                                        dataViewModel.detonatorDatas.get(i).setBlasterTimeErr(t - BLASTER_TIMER_DELAY);
+                                        color += 0x04;
+                                    }
+                                }
+                                if (color == 0)
+                                    color = 0x80;
+                                else
+                                    errCount++;
+                                dataViewModel.detonatorDatas.get(i).setColor(color);
+                            }
+                            setTotalCount(newDetonator, 0);
+                            Log.e("new det ", String.valueOf(newDetonator));
+                            waitPublish = false;
+                        }
+                    }
+                    break;
+                case COMM_GET_UUID_BUFFER:
+                    if (values[1] == 1) {
+                        try {
+                            infoDialog.progressBar.setMax(values[3]);
+                            infoDialog.progressBar.setProgress(values[2]);
+                            infoDialog.setMessageTxt(String.format("读取数据(%d/%d)", values[2] / 2, values[3] / 2));
+                            Log.e("read ", String.valueOf(values[2]) + " " + String.valueOf(values[3]));
+                            if (values[2].equals(values[3])) {
+                                DetonatorData detonatorData;
+                                for (i = 0; i < newDetonator; i++) {
+                                    UuidData uuidData = new UuidData();
+                                    getUuidData(dataViewModel.uuidBuffer, 16 * i, uuidData);
+                                    int color = 0;
+                                    int j;
+                                    for (j = 0; j < dataViewModel.detonatorDatas.size(); j++) {
+                                        if (dataViewModel.detonatorDatas.get(j).getUuid().equals(uuidData.getUuid())) {
+                                            dataViewModel.detonatorDatas.get(j).setId(uuidData.getId());
+                                            if (uuidData.getNum() != dataViewModel.detonatorDatas.get(j).getHoleNum()) {
+                                                color = 0x01;
+                                                dataViewModel.detonatorDatas.get(j).setHoleNumErr(uuidData.getNum());
+                                            }
+
+                                            if (uuidData.getArea() != dataViewModel.detonatorDatas.get(j).getRowNum()) {
+                                                color += 0x02;
+                                                dataViewModel.detonatorDatas.get(j).setRowNumErr(uuidData.getArea());
+                                            }
+                                            if (uuidData.getDelay() != (dataViewModel.detonatorDatas.get(j).getBlasterTime() + BLASTER_TIMER_DELAY)) {
+                                                dataViewModel.detonatorDatas.get(j).setBlasterTimeErr(uuidData.getDelay() - BLASTER_TIMER_DELAY);
+                                                color += 0x04;
+                                            }
+                                            if (color == 0)
+                                                color = 0x80;
+                                            else
+                                                errCount++;
+                                            dataViewModel.detonatorDatas.get(j).setColor(color);
+                                            break;
+                                        }
+                                    }
+                                    if (j == dataViewModel.detonatorDatas.size()) {
+                                        detonatorData = new DetonatorData();
+                                        detonatorData.setId(uuidData.getId());
+                                        detonatorData.setRowNum(uuidData.getArea());
+                                        detonatorData.setHoleNum(uuidData.getNum());
+                                        detonatorData.setBlasterTime(uuidData.getDelay() - BLASTER_TIMER_DELAY);
+                                        detonatorData.setUuid(uuidData.getUuid());
+                                        detonatorData.setColor(0x40);
+                                        dataViewModel.detonatorDatas.add(detonatorData);
+                                    }
+                                }
+                                waitPublish = false;
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        battEnable = true;
+                                        infoDialog.dismissAllowingStateLoss();
+                                        FragmentLoad fragmentLoad = new FragmentLoad();
+                                        fragmentLoad.setCancelable(false);
+                                        fragmentLoad.show(getSupportFragmentManager(), "load");
+                                        if(errCount!=0)
+                                            checkError++;
+                                        else
+                                            checkCorrect++;
+                                        setCheckText();
+                                        btStart.performClick();
+                                    }
+                                });
+                            }
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+                case COMM_DOWNLOAD_DATA:
+                    if (values[1] == 1) {
+                        try {
+                            infoDialog.progressBar.setMax(values[2]);
+                            infoDialog.progressBar.setProgress(values[3]);
+                            infoDialog.setMessageTxt(String.format("传送数据(%d/%d)", values[3], values[2]));
+                            Log.e("read ", String.valueOf(values[2]) + " " + String.valueOf(values[3]));
+                            if (values[2].equals(values[3])) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        infoDialog.dismissAllowingStateLoss();
+                                        FragmentLoad fragmentLoad = new FragmentLoad();
+                                        fragmentLoad.setCancelable(false);
+                                        fragmentLoad.show(getSupportFragmentManager(), "load");
+                                        battEnable = true;
+                                    }
+                                });
+                            }
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+
+            }
+
+            commEnable = true;
+        }
+
+        @Override
+        protected void onPostExecute(Integer integer) {
+            super.onPostExecute(integer);
+            switch (integer) {
+                case 0:
+                case -1:
+                    break;
+
+            }
+            commEnable = true;
+        }
+
+        @Override
+        protected void onCancelled() {
+            super.onCancelled();
+            commEnable = true;
+            Log.e("commTask", "close thread");
+            serialPortUtils.sendStop = true;
+        }
+
+        @Override
+        protected void onCancelled(Integer integer) {
+            super.onCancelled(integer);
+            commEnable = true;
+            Log.e("commTask", "close thread");
+            serialPortUtils.sendStop = true;
+        }
+
+    }
 
     private void initFragment() {
 //        dataViewModel.resetDataList();
@@ -398,7 +656,7 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
                     @Override
                     public void onButtonClick(int index, String str) {
                         commTask.cancel(true);
-                        commTask = new CommTask(NetActivity.this);
+                        commTask = new CommTask(SelfTestActivity.this);
                         commTask.execute(2, COMM_IDLE, COMM_STOP_OUTPUT);
                         battEnable = true;
                     }
@@ -428,7 +686,7 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
                     d.setColor(0);
                 }
                 commTask.cancel(true);
-                commTask = new CommTask(NetActivity.this);
+                commTask = new CommTask(SelfTestActivity.this);
                 commTask.setTotalCount(dataViewModel.detonatorDatas.size(), 0);
                 commTask.execute(8, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_RESET_DETONATOR,
                         COMM_PUT_ID_BUFFER, COMM_CHECK_NET, COMM_DETONATE_PROGRESS, COMM_GET_ID_BUFFER, COMM_WAIT_PUBLISH, COMM_GET_UUID_BUFFER, COMM_WAIT_PUBLISH, COMM_IDLE, COMM_STOP_OUTPUT);
@@ -491,267 +749,33 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
                 fragmentResult.show(getSupportFragmentManager(), "result");
                 break;
             case R.id.bt_download:
-                infoDialog = new InfoDialog();
-                infoDialog.setTitle("同步数据");
-                infoDialog.setMessage("传输数据");
-                infoDialog.setProgressEnable(true);
-                infoDialog.setCancelable(false);
-                infoDialog.setBtn2Enable(true);
-                infoDialog.setChronometerEnable(true);
-                infoDialog.setOnButtonClickListener(new InfoDialog.OnButtonClickListener() {
-                    @Override
-                    public void onButtonClick(int index, String str) {
-                        commTask.cancel(true);
-                        commTask = new CommTask(NetActivity.this);
-                        commTask.execute(2, COMM_IDLE, COMM_STOP_OUTPUT);
-                        battEnable = true;
-                    }
-                });
-                infoDialog.show(getSupportFragmentManager(), "info");
-                commTask.cancel(true);
-                commTask = new CommTask(NetActivity.this);
-                commTask.execute(8, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_DOWNLOAD_DATA, COMM_IDLE, COMM_STOP_OUTPUT);
+
+//                infoDialog = new InfoDialog();
+//                infoDialog.setTitle("同步数据");
+//                infoDialog.setMessage("传输数据");
+//                infoDialog.setProgressEnable(true);
+//                infoDialog.setCancelable(false);
+//                infoDialog.setBtn2Enable(true);
+//                infoDialog.setChronometerEnable(true);
+//                infoDialog.setOnButtonClickListener(new InfoDialog.OnButtonClickListener() {
+//                    @Override
+//                    public void onButtonClick(int index, String str) {
+//                        commTask.cancel(true);
+//                        commTask = new CommTask(SelfTestActivity.this);
+//                        commTask.execute(2, COMM_IDLE, COMM_STOP_OUTPUT);
+//                        battEnable = true;
+//                    }
+//                });
+//                infoDialog.show(getSupportFragmentManager(), "info");
+//                commTask.cancel(true);
+//                commTask = new CommTask(SelfTestActivity.this);
+//                commTask.execute(8, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_DOWNLOAD_DATA, COMM_IDLE, COMM_STOP_OUTPUT);
+                checkCorrect = 0;
+                checkError = 0;
+                setCheckText();
                 break;
         }
     }
-
-
-    @SuppressLint("StaticFieldLeak")
-    private class CommTask extends CommDetonator {
-
-        public CommTask(Context context) {
-            this.serialPortUtils = SerialPortUtils.getInstance(context);
-            this.dataViewModel = new ViewModelProvider(serialPortUtils.mActivity).get(DataViewModel.class);
-            this.serialPortUtils.sendStop = true;
-            commEnable = false;
-        }
-
-
-        @SuppressLint("DefaultLocale")
-        @Override
-        protected void onProgressUpdate(Integer... values) {
-            super.onProgressUpdate(values);
-            int i;
-            float p;
-            switch (values[0]) {
-                case COMM_PUT_ID_BUFFER:
-                    if (values[1] == 1) {
-                        if (infoDialog.progressBar != null) {
-                            infoDialog.progressBar.setMax(values[3]);
-                            infoDialog.progressBar.setProgress(values[2]);
-                            infoDialog.setMessageTxt(String.format("传输数据(%d/%d)", values[2], values[3]));
-                        }
-                    }
-                    break;
-                case COMM_CHECK_NET:
-                    infoDialog.progressBar.setMax(dataViewModel.detonatorDatas.size());
-                    infoDialog.progressBar.setMax(17);
-                    infoDialog.progressBar.setProgress(0);
-                    break;
-                case COMM_DETONATE_PROGRESS:
-                    try {
-
-                        i = (values[2] >> 24) & 0x0ff;
-                        int j = (values[2] >> 16) & 0x0ff;
-                        int d = values[2] & 0x0ffff;
-                        int s = values[4] & 0x0ffff;
-                        switch (i) {
-                            case 0:
-                            case 1:
-                                infoDialog.progressBar.setProgress(j);
-                                break;
-                            case 2:
-                            case 3:
-                            case 4:
-                                infoDialog.progressBar.setProgress(16);
-                                break;
-                            case 5:
-                                infoDialog.progressBar.setProgress(17);
-                                newDetonator = d;
-                                breaking = true;
-                                break;
-                        }
-                        infoDialog.setMessageTxt(String.format("扫描网络 %d", s + d));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    break;
-
-                case COMM_GET_ID_BUFFER:
-                    if (values[1] == 1) {
-                        try {
-                            p = values[2] * 100;
-                            p = p / values[3];
-                            infoDialog.progressBar.setMax(values[3]);
-                            infoDialog.progressBar.setProgress(values[2]);
-                            infoDialog.setMessageTxt(String.format("读取数据(%d/%d)", values[2], values[3]));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        if (values[2].equals(values[3]) || values[3].equals(0)) {
-                            //               infoDialog.dismiss();
-                            int color;
-                            for (i = 0; i < values[3]; i++) {
-                                color = 0;
-//                                if (dataViewModel.detonatorDatas.get(i).getId() == 0)
-//                                    continue;
-                                if ((dataViewModel.statusBuffer[i] & 0x000000ff) != 1)
-                                    color = 0x01f;
-                                else {
-                                    int a, h, t;
-                                    h = dataViewModel.areaBuffer[i] & 0x0ffff;
-                                    a = h / 1000;
-                                    h = h - a * 1000;
-                                    t = (dataViewModel.areaBuffer[i] >> 16) & 0x0ffff;
-                                    if (h != dataViewModel.detonatorDatas.get(i).getHoleNum()) {
-                                        color = 0x01;
-                                        dataViewModel.detonatorDatas.get(i).setHoleNumErr(h);
-                                    }
-                                    if (a != dataViewModel.detonatorDatas.get(i).getRowNum()) {
-                                        color += 0x02;
-                                        dataViewModel.detonatorDatas.get(i).setRowNumErr(a);
-                                    }
-                                    if (t != (dataViewModel.detonatorDatas.get(i).getBlasterTime() + BLASTER_TIMER_DELAY)) {
-                                        dataViewModel.detonatorDatas.get(i).setBlasterTimeErr(t - BLASTER_TIMER_DELAY);
-                                        color += 0x04;
-                                    }
-                                }
-                                if (color == 0)
-                                    color = 0x80;
-                                dataViewModel.detonatorDatas.get(i).setColor(color);
-                            }
-                            setTotalCount(newDetonator, 0);
-                            Log.e("new det ", String.valueOf(newDetonator));
-                            waitPublish = false;
-                        }
-                    }
-                    break;
-                case COMM_GET_UUID_BUFFER:
-                    if (values[1] == 1) {
-                        try {
-                            infoDialog.progressBar.setMax(values[3]);
-                            infoDialog.progressBar.setProgress(values[2]);
-                            infoDialog.setMessageTxt(String.format("读取数据(%d/%d)", values[2] / 2, values[3] / 2));
-                            Log.e("read ", String.valueOf(values[2]) + " " + String.valueOf(values[3]));
-                            if (values[2].equals(values[3])) {
-                                DetonatorData detonatorData;
-                                for (i = 0; i < newDetonator; i++) {
-                                    UuidData uuidData = new UuidData();
-                                    getUuidData(dataViewModel.uuidBuffer, 16 * i, uuidData);
-                                    int color = 0;
-                                    int j;
-                                    for (j = 0; j < dataViewModel.detonatorDatas.size(); j++) {
-                                        if (dataViewModel.detonatorDatas.get(j).getUuid().equals(uuidData.getUuid())) {
-                                            dataViewModel.detonatorDatas.get(j).setId(uuidData.getId());
-                                            if (uuidData.getNum() != dataViewModel.detonatorDatas.get(j).getHoleNum()) {
-                                                color = 0x01;
-                                                dataViewModel.detonatorDatas.get(j).setHoleNumErr(uuidData.getNum());
-                                            }
-
-                                            if (uuidData.getArea() != dataViewModel.detonatorDatas.get(j).getRowNum()) {
-                                                color += 0x02;
-                                                dataViewModel.detonatorDatas.get(j).setRowNumErr(uuidData.getArea());
-                                            }
-                                            if (uuidData.getDelay() != (dataViewModel.detonatorDatas.get(j).getBlasterTime() + BLASTER_TIMER_DELAY)) {
-                                                dataViewModel.detonatorDatas.get(j).setBlasterTimeErr(uuidData.getDelay() - BLASTER_TIMER_DELAY);
-                                                color += 0x04;
-                                            }
-                                            if (color == 0)
-                                                color = 0x80;
-                                            dataViewModel.detonatorDatas.get(j).setColor(color);
-                                            break;
-                                        }
-                                    }
-                                    if (j == dataViewModel.detonatorDatas.size()) {
-                                        detonatorData = new DetonatorData();
-                                        detonatorData.setId(uuidData.getId());
-                                        detonatorData.setRowNum(uuidData.getArea());
-                                        detonatorData.setHoleNum(uuidData.getNum());
-                                        detonatorData.setBlasterTime(uuidData.getDelay() - BLASTER_TIMER_DELAY);
-                                        detonatorData.setUuid(uuidData.getUuid());
-                                        detonatorData.setColor(0x40);
-                                        dataViewModel.detonatorDatas.add(detonatorData);
-                                    }
-                                }
-                                waitPublish = false;
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        battEnable = true;
-                                        infoDialog.dismissAllowingStateLoss();
-                                        FragmentLoad fragmentLoad = new FragmentLoad();
-                                        fragmentLoad.setCancelable(false);
-                                        fragmentLoad.show(getSupportFragmentManager(), "load");
-                                    }
-                                });
-                            }
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    break;
-                case COMM_DOWNLOAD_DATA:
-                    if (values[1] == 1) {
-                        try {
-                            infoDialog.progressBar.setMax(values[2]);
-                            infoDialog.progressBar.setProgress(values[3]);
-                            infoDialog.setMessageTxt(String.format("传送数据(%d/%d)", values[3], values[2]));
-                            Log.e("read ", String.valueOf(values[2]) + " " + String.valueOf(values[3]));
-                            if (values[2].equals(values[3])) {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        infoDialog.dismissAllowingStateLoss();
-                                        FragmentLoad fragmentLoad = new FragmentLoad();
-                                        fragmentLoad.setCancelable(false);
-                                        fragmentLoad.show(getSupportFragmentManager(), "load");
-                                        battEnable = true;
-                                    }
-                                });
-                            }
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    break;
-
-            }
-
-            commEnable = true;
-        }
-
-        @Override
-        protected void onPostExecute(Integer integer) {
-            super.onPostExecute(integer);
-            switch (integer) {
-                case 0:
-                case -1:
-                    break;
-
-            }
-            commEnable = true;
-        }
-
-        @Override
-        protected void onCancelled() {
-            super.onCancelled();
-            commEnable = true;
-            Log.e("commTask", "close thread");
-            serialPortUtils.sendStop = true;
-        }
-
-        @Override
-        protected void onCancelled(Integer integer) {
-            super.onCancelled(integer);
-            commEnable = true;
-            Log.e("commTask", "close thread");
-            serialPortUtils.sendStop = true;
-        }
-
-    }
-
 
     @Override
     public void onBackPressed() {
@@ -844,6 +868,4 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
             });
         }
     }
-
-
 }

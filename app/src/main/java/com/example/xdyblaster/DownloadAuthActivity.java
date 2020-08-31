@@ -1,16 +1,17 @@
 package com.example.xdyblaster;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -22,7 +23,6 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.xdyblaster.fragment.FragmentAuthInput;
@@ -49,8 +49,6 @@ import okhttp3.Response;
 import utils.SerialPortUtils;
 
 import static com.example.xdyblaster.util.FileFunc.saveAuthFile;
-import static com.example.xdyblaster.util.FileFunc.tintDrawable;
-import static com.example.xdyblaster.util.UartData.CRC16;
 
 public class DownloadAuthActivity extends AppCompatActivity implements CustomAdapt {
 
@@ -92,6 +90,10 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
     EditText etJd;
     @BindView(R.id.etWd)
     EditText etWd;
+    @BindView(R.id.etName)
+    EditText etName;
+    @BindView(R.id.lt_position)
+    LinearLayout ltPosition;
     private DataViewModel dataViewModel;
     private SerialPortUtils serialPortUtils;
     String htid, xmbh, dwdm;
@@ -130,6 +132,18 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
                 }
             }
         });
+//        btEdit.setFocusable(true);
+//        btEdit.setFocusableInTouchMode(true);
+//        hideSoftKeyboard(this);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+    }
+
+    public static void hideSoftKeyboard(Activity activity) {
+        View view = activity.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager inputMethodManager = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+        }
     }
 
     @Override
@@ -142,24 +156,31 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
         return 500;
     }
 
+
     private void showError(String str) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        Drawable drawable1 = ContextCompat.getDrawable(this, R.mipmap.ic_report_problem_white_48dp);
-        Drawable drawableR = tintDrawable(drawable1, ContextCompat.getColor(this, R.color.colorRed));
-        builder.setIcon(drawableR);
-        builder.setTitle("数据错误");
-        builder.setMessage(str);
-//        final String[] choice=new String[]{"上海","北京","重庆","广州","天津"};
-//        //设置单选对话框的监听
-//        builder.setSingleChoiceItems(choice, 2, new DialogInterface.OnClickListener() {
-//            @Override
-//            public void onClick(DialogInterface dialog, int which) {
-//                Toast.makeText(NewFileActivity.this,"你选中了"+choice[which], Toast.LENGTH_SHORT).show();
-//            }
-//        });
-        builder.setCancelable(true);
-        builder.create().show();
+        InfoDialog infoDialog = new InfoDialog();
+        infoDialog.setTitle("数据错误");
+        infoDialog.setMessage(str);
+        infoDialog.show(getSupportFragmentManager(), "info");
     }
+//    private void showError(String str) {
+//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//        Drawable drawable1 = ContextCompat.getDrawable(this, R.mipmap.ic_report_problem_white_48dp);
+//        Drawable drawableR = tintDrawable(drawable1, ContextCompat.getColor(this, R.color.colorRed));
+//        builder.setIcon(drawableR);
+//        builder.setTitle("数据错误");
+//        builder.setMessage(str);
+////        final String[] choice=new String[]{"上海","北京","重庆","广州","天津"};
+////        //设置单选对话框的监听
+////        builder.setSingleChoiceItems(choice, 2, new DialogInterface.OnClickListener() {
+////            @Override
+////            public void onClick(DialogInterface dialog, int which) {
+////                Toast.makeText(NewFileActivity.this,"你选中了"+choice[which], Toast.LENGTH_SHORT).show();
+////            }
+////        });
+//        builder.setCancelable(true);
+//        builder.create().show();
+//    }
 
 
     @SuppressLint({"SetTextI18n", "DefaultLocale"})
@@ -304,7 +325,6 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        connectDialog();
                         HttpReadWrite httpReadWrite = new HttpReadWrite();
                         httpReadWrite.execute(1);
                     }
@@ -316,9 +336,10 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
 
     private void connectDialog() {
         View view = LayoutInflater.from(this).inflate(R.layout.fragment_connect, null, false);
-        dialog = new AlertDialog.Builder(this).setView(view).create();
+        dialog = new AlertDialog.Builder(DownloadAuthActivity.this).setView(view).create();
         Window win = dialog.getWindow();
         // 一定要设置Background，如果不设置，window属性设置无效
+        assert win != null;
         win.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         win.setDimAmount(0.4f);
         WindowManager.LayoutParams layoutParams = win.getAttributes();
@@ -332,12 +353,25 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
     }
 
 
+    @SuppressLint("StaticFieldLeak")
     public class HttpReadWrite extends AsyncTask<Integer, Object, Integer> {
+        @Override
+        protected void onPreExecute() {
+            connectDialog();
+//            super.onPreExecute();
+        }
 
         @Override
         protected Integer doInBackground(Integer... integers) {
             Response response = null;
-            while (!dialog.isShowing()) ;
+
+            while (!dialog.isShowing()) {
+                try {
+                    Thread.sleep(100);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             switch (integers[0]) {
                 case 1:
                 case 2:
@@ -359,6 +393,8 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
                             e.printStackTrace();
                             publishProgress(integers[0], -1, "");
                         }
+                    } else {
+                        publishProgress(integers[0], -1, "");
                     }
                     break;
             }

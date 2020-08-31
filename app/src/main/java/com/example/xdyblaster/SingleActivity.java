@@ -372,8 +372,8 @@ public class SingleActivity extends AppCompatActivity {
 //            }
 //        });
         dataViewModel.keyHandler = handler;
-    //    myReceiver = new KeyReceiver(this, handler, dataViewModel);
-        if(dataViewModel.systemCount<10)
+        //    myReceiver = new KeyReceiver(this, handler, dataViewModel);
+        if (dataViewModel.systemCount < 10)
             layoutFullTest.setVisibility(View.GONE);
 
         commTask.execute(5, COMM_IDLE, COMM_GET_BATT, COMM_POWER_9V, COMM_DELAY, COMM_CALIBRATE);
@@ -424,7 +424,7 @@ public class SingleActivity extends AppCompatActivity {
         commTask.cancel(true);
         mMediaPlayer.release();
         mMediaPlayer2.release();
-        dataViewModel.keyHandler=null;
+        dataViewModel.keyHandler = null;
         //unregisterReceiver(myReceiver);
         mRealm.close();
 
@@ -623,22 +623,23 @@ public class SingleActivity extends AppCompatActivity {
                         avi4.hide();
                         tvResult4.setVisibility(View.VISIBLE);
                         tvResult4.setText(str);
-                        if (d < 10) {
+                        if ((d < 10) && (values[4] > 10)) {
                             ivok4.setVisibility(View.VISIBLE);
                         } else {
                             ivError4.setVisibility(View.VISIBLE);
                             scanErr = true;
                             showDetnatorError();
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    InfoDialog err = new InfoDialog();
-                                    err.setTitle("电流故障");
-                                    err.setMessage("电流异常，禁止完整测试！");
-                                    err.show(getSupportFragmentManager(), "info");
-                                    err.setCancelable(true);
-                                }
-                            });
+                            if (d > 10)
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        InfoDialog err = new InfoDialog();
+                                        err.setTitle("电流故障");
+                                        err.setMessage("电流异常，禁止完整测试！");
+                                        err.show(getSupportFragmentManager(), "info");
+                                        err.setCancelable(true);
+                                    }
+                                });
                             running = false;
                             waitPublish = false;
                         }
@@ -706,13 +707,19 @@ public class SingleActivity extends AppCompatActivity {
                         avi8.hide();
                         tvResult7.setVisibility(View.VISIBLE);
                         tvResult7.setText(str);
-                        ivok7.setVisibility(View.VISIBLE);
+                        if ((f > 560.0) || (f < 450.0))
+                            ivError7.setVisibility(View.VISIBLE);
+                        else
+                            ivok7.setVisibility(View.VISIBLE);
                         s = values[4];
                         s = f / (s / 4096);
                         str = String.format("%.1f kHz", s);
                         tvResult8.setVisibility(View.VISIBLE);
                         tvResult8.setText(str);
-                        ivok8.setVisibility(View.VISIBLE);
+                        if (s > 48 || s < 29)
+                            ivError8.setVisibility(View.VISIBLE);
+                        else
+                            ivok8.setVisibility(View.VISIBLE);
                     } else {
                         avi7.hide();
                         avi8.hide();

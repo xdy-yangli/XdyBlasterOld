@@ -63,7 +63,7 @@
                 android:layout_marginEnd="4dp"
                 android:layout_weight="1"
                 android:background="@drawable/blue_btn"
-                android:text="上传丹灵"
+                android:text="上传民爆"
                 android:textColor="@color/white"
                 android:textSize="24sp" />
             <Button
@@ -75,7 +75,7 @@
                 android:layout_marginEnd="4dp"
                 android:layout_weight="1"
                 android:background="@drawable/blue_btn"
-                android:text="上传广西"
+                android:text="上传中爆"
                 android:textColor="@color/white"
                 android:textSize="24sp" />
             <Button

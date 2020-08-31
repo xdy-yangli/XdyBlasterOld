@@ -1,10 +1,15 @@
 package com.example.xdyblaster;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.util.Log;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 
@@ -26,10 +31,13 @@ public class BootReceiver extends BroadcastReceiver {
             it.addCategory("android.intent.category.LAUNCHER");
             it.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(it);
+
+
             Log.e("boot", "Boot 开机自动启动");
         } else {
             Log.e("boot", "Boot 非开机自动启动");
         }
+
 
 
 //        Log.i("logs::", intent.getAction());

@@ -15,6 +15,8 @@ import com.example.xdyblaster.util.DataViewModel;
 
 public class MinaClient {
     public OnSendDataListener onSendDataListener = null;
+    MinaHandler minaHandler;
+    int ack;
 
     //
 //	public static void main(String[] args) {
@@ -35,7 +37,14 @@ public class MinaClient {
         connector.getSessionConfig().setReadBufferSize(2048);
         connector.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10000);
         connector.setConnectTimeoutMillis(1000 * 60 * 3);
-        connector.setHandler(new MinaHandler());
+        minaHandler = new MinaHandler();
+        minaHandler.onReceDataListener = new MinaHandler.OnReceDataListener() {
+            @Override
+            public void receDataStatus(int status) {
+                ack = status;
+            }
+        };
+        connector.setHandler(minaHandler);
 //		ConnectFuture cf = connector.connect(new InetSocketAddress("127.0.0.1",
 //				1089));
         ConnectFuture cf = connector.connect(new InetSocketAddress("119.29.111.172",
@@ -63,8 +72,6 @@ public class MinaClient {
 */
 
 
-
-
         long l = new Date().getTime();
         long m = 0;
         long n = 0;
@@ -75,10 +82,11 @@ public class MinaClient {
         float f;
         if (onSendDataListener != null)
             onSendDataListener.sendDataResult(0);
+        ack = -1;
         while (s) {
             m = new Date().getTime();
             n = m - l;
-            if (n > 1000 * 6) {
+            if ((n > 1000 * 6) || ack != -1) {
                 l = new Date().getTime();
                 System.out.println("++++++++++++++++开始发送(" + i + ")++++++++++++++++++++");
                 message = new MinaMessageRec();
@@ -94,7 +102,7 @@ public class MinaClient {
                 message.setLat(f);
                 message.setSn("53AC6001");
                 String d = dataViewModel.bpsj;
-                d=d.substring(2, 4) + d.substring(5, 7) + d.substring(8, 10) + d.substring(11, 13) + d.substring(14, 16) + d.substring(17, 19);
+                d = d.substring(2, 4) + d.substring(5, 7) + d.substring(8, 10) + d.substring(11, 13) + d.substring(14, 16) + d.substring(17, 19);
                 message.setQbDate(d);//Format.dateToString(new Date(), "yyMMddHHmmss"));
 
 //                message.setLng(105.451433);
@@ -127,6 +135,7 @@ public class MinaClient {
                 if (onSendDataListener != null)
                     onSendDataListener.sendDataResult(k * 100 / list.size());
                 System.out.println("发送包2");
+                ack = -1;
                 cf.getSession().write(message.toByte());//触发handler
 //
 //                //保持连接
@@ -143,7 +152,6 @@ public class MinaClient {
         }
         if (onSendDataListener != null)
             onSendDataListener.sendDataResult(100);
-
 
 
         cf.getSession().getCloseFuture().awaitUninterruptibly();
