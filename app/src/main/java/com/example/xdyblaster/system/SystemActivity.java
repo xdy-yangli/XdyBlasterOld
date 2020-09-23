@@ -20,10 +20,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.xdyblaster.MainActivity;
 import com.example.xdyblaster.R;
 import com.example.xdyblaster.util.CommDetonator;
 import com.example.xdyblaster.util.DataViewModel;
 import com.example.xdyblaster.util.InfoDialog;
+import com.xuexiang.xupdate.utils.UpdateUtils;
 
 import java.io.InputStream;
 
@@ -301,7 +303,13 @@ public class SystemActivity extends AppCompatActivity implements CustomAdapt {
                 break;
             case R.id.layout_update:
                 try {
-                    InputStream is = getAssets().open("code.bin");
+
+                    InputStream is;
+                    if (UpdateUtils.getVersionCode(SystemActivity.this) > 100)
+                        is = getAssets().open("code.bin");
+                    else
+                        is = getAssets().open("code2.bin");
+                    //InputStream is = getAssets().open("code.bin");
                     fileLen = ((is.available() + 7) / 8) * 8;
                     fileData = new byte[fileLen];
                     if (is.read(fileData) != 0)

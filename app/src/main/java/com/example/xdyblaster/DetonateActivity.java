@@ -823,7 +823,7 @@ public class DetonateActivity extends AppCompatActivity {
                         break;
                     case COMM_CHECK_NET:
                         infoDialog.progressBar.setMax(dataViewModel.detonatorDatas.size());
-                        infoDialog.progressBar.setMax(17);
+                        //infoDialog.progressBar.setMax(17);
                         infoDialog.progressBar.setProgress(0);
                         break;
                     case COMM_DETONATE_PROGRESS:
@@ -836,18 +836,27 @@ public class DetonateActivity extends AppCompatActivity {
                             switch (i) {
                                 case 0:
                                 case 1:
+                                    infoDialog.progressBar.setMax(17);
                                     infoDialog.progressBar.setProgress(j);
                                     break;
                                 case 2:
                                 case 3:
                                 case 4:
+                                    infoDialog.progressBar.setMax(17);
                                     infoDialog.progressBar.setProgress(16);
                                     break;
                                 case 5:
+                                    infoDialog.progressBar.setMax(17);
                                     infoDialog.progressBar.setProgress(17);
                                     newDetonator = d;
                                     breaking = true;
                                     break;
+                                case 10:
+                                    infoDialog.progressBar.setProgress(s);
+                                    break;
+
+
+
                             }
                             infoDialog.setMessageTxt(String.format("扫描网络 %d", s + d));
                         } catch (Exception e) {

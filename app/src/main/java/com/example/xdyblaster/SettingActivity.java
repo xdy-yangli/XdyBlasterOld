@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.xdyblaster.system.SystemActivity;
 import com.example.xdyblaster.util.DataViewModel;
 import com.xuexiang.xupdate.XUpdate;
+import com.xuexiang.xupdate.utils.UpdateUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -69,9 +70,9 @@ public class SettingActivity extends AppCompatActivity implements CustomAdapt {
     private SerialPortUtils serialPortUtils;
     private DataViewModel dataViewModel;
 
-    private String apkUrl = "http://gzyte.com.cn/download/app-debug.apk";
-    private String updateTitle = "发现新版本V2.0.0";
-    private String updateContent = "1、Kotlin重构版\n2、支持自定义UI\n3、增加md5校验\n4、更多功能等你探索";
+    //    private String apkUrl = "http://gzyte.com.cn/download/app-debug.apk";
+//    private String updateTitle = "发现新版本V2.0.0";
+//    private String updateContent = "1、Kotlin重构版\n2、支持自定义UI\n3、增加md5校验\n4、更多功能等你探索";
     private String mUpdateUrl = "http://gzyte.com.cn/download/update_test.json";
 
 
@@ -86,6 +87,11 @@ public class SettingActivity extends AppCompatActivity implements CustomAdapt {
         dataViewModel = new ViewModelProvider(serialPortUtils.mActivity).get(DataViewModel.class);
         dataViewModel.systemCount = 0;
         dataViewModel.keyHandler = handler;
+        if (UpdateUtils.getVersionCode(this) > 100)
+            mUpdateUrl = "http://gzyte.com.cn/download/update_test.json";
+        else
+            mUpdateUrl = "http://gzyte.com.cn/download/test/update_test.json";
+
 
         //  UpdateAppUtils.init(this);
 

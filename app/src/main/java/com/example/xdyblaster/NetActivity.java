@@ -570,6 +570,10 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
                                 newDetonator = d;
                                 breaking = true;
                                 break;
+                            case 10:
+                                infoDialog.progressBar.setProgress(s);
+                                break;
+
                         }
                         infoDialog.setMessageTxt(String.format("扫描网络 %d", s + d));
                     } catch (Exception e) {
@@ -635,6 +639,7 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
                             Log.e("read ", String.valueOf(values[2]) + " " + String.valueOf(values[3]));
                             if (values[2].equals(values[3])) {
                                 DetonatorData detonatorData;
+                                dataViewModel.dataChanged = true;
                                 for (i = 0; i < newDetonator; i++) {
                                     UuidData uuidData = new UuidData();
                                     getUuidData(dataViewModel.uuidBuffer, 16 * i, uuidData);

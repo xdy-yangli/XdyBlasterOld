@@ -41,6 +41,7 @@ import com.example.xdyblaster.ble.BleManager;
 import com.example.xdyblaster.fragment.FragmentVolt;
 import com.example.xdyblaster.http.OKHttpUpdateHttpService;
 import com.example.xdyblaster.system.BleActivity;
+import com.example.xdyblaster.system.SystemActivity;
 import com.example.xdyblaster.util.CommDetonator;
 import com.example.xdyblaster.util.DataViewModel;
 import com.example.xdyblaster.util.DetonatorSetting;
@@ -871,7 +872,11 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
                         b[11] = (byte) ((values[4] >> 24) & 0x0ff);
                         dataViewModel.devVer = new String(b);
                         try {
-                            InputStream is = getAssets().open("code.bin");
+                            InputStream is;
+                            if (UpdateUtils.getVersionCode(MainActivity.this) > 100)
+                                is = getAssets().open("code.bin");
+                            else
+                                is = getAssets().open("code2.bin");
                             int fileLen = ((is.available() + 7) / 8) * 8;
                             byte[] fileData = new byte[12];
                             if (fileLen > 0x600) {
@@ -1095,7 +1100,12 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
 
     private void updateDialog() {
         try {
-            InputStream is = getAssets().open("code.bin");
+            InputStream is;
+            if (UpdateUtils.getVersionCode(MainActivity.this) > 100)
+                is = getAssets().open("code.bin");
+            else
+                is = getAssets().open("code2.bin");
+            //InputStream is = getAssets().open("code.bin");
             fileLen = ((is.available() + 7) / 8) * 8;
             fileData = new byte[fileLen];
             if (is.read(fileData) != 0) {
