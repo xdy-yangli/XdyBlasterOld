@@ -157,10 +157,10 @@ public class DetonatorData {
     public String getUuid() {
         return this.uuid;
     }
-    public Long getUuidLong() {
-
-        return Long.parseLong(this.uuid);
-    }
+//    public Long getUuidLong() {
+//
+//        return Long.parseLong(this.uuid);
+//    }
 
     public void convertDataToBuffer(byte[] buffer, int pos) {
         byte[] uuidHex = new byte[5];

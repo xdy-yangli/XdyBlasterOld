@@ -1,6 +1,7 @@
 package com.example.xdyblaster.util;
 
 
+import static com.example.xdyblaster.util.AppConstants.BLASTER_TIMER_DELAY;
 import static com.example.xdyblaster.util.AppConstants.DEV_CALC_VOLTAGE;
 import static com.example.xdyblaster.util.AppConstants.DEV_CHECK_NET;
 //import static com.example.xdyblaster.util.AppConstants.DEV_GET_ALL_DATA;
@@ -9,6 +10,7 @@ import static com.example.xdyblaster.util.AppConstants.DEV_GET_UUID;
 import static com.example.xdyblaster.util.AppConstants.DEV_POWER_12V;
 import static com.example.xdyblaster.util.AppConstants.DEV_POWER_24V;
 import static com.example.xdyblaster.util.AppConstants.DEV_POWER_9V;
+import static com.example.xdyblaster.util.AppConstants.DEV_PUT_AREA;
 import static com.example.xdyblaster.util.AppConstants.DEV_PUT_ID;
 import static com.example.xdyblaster.util.AppConstants.DEV_PUT_UUID;
 import static com.example.xdyblaster.util.AppConstants.DEV_READ_EE;
@@ -45,7 +47,7 @@ public class UartData {
     public byte[] m_timer = new byte[4];
     public byte[] m_freq = new byte[4];
     public byte[] uuid = new byte[16];
-    public int blasterTimer, count, total;
+    public int blasterTimer, count, total, hole, area;
     public long macid;
     public int length;
     public int volt;
@@ -125,6 +127,13 @@ public class UartData {
         if (cmd == DEV_PUT_ID) {
             FileFunc.SetModbusData32(m_uartCmdBuffer, (int) macid, MODBUS_MAC0);
             FileFunc.SetModbusData32(m_uartCmdBuffer, blasterTimer, MODBUS_DATA00);
+            FileFunc.SetModbusData16(m_uartCmdBuffer, count, MODBUS_DATA10);
+            FileFunc.SetModbusData16(m_uartCmdBuffer, total, MODBUS_DATA12);
+        }
+        if (cmd == DEV_PUT_AREA) {
+            FileFunc.SetModbusData16(m_uartCmdBuffer, blasterTimer + BLASTER_TIMER_DELAY, MODBUS_DATA02);
+            FileFunc.SetModbusData16(m_uartCmdBuffer, area * 1000 + hole, MODBUS_DATA00);
+            FileFunc.SetModbusData32(m_uartCmdBuffer, (int) macid, MODBUS_MAC0);
             FileFunc.SetModbusData16(m_uartCmdBuffer, count, MODBUS_DATA10);
             FileFunc.SetModbusData16(m_uartCmdBuffer, total, MODBUS_DATA12);
         }

@@ -7,7 +7,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.location.LocationManager;
@@ -41,7 +40,6 @@ import com.example.xdyblaster.ble.BleManager;
 import com.example.xdyblaster.fragment.FragmentVolt;
 import com.example.xdyblaster.http.OKHttpUpdateHttpService;
 import com.example.xdyblaster.system.BleActivity;
-import com.example.xdyblaster.system.SystemActivity;
 import com.example.xdyblaster.util.CommDetonator;
 import com.example.xdyblaster.util.DataViewModel;
 import com.example.xdyblaster.util.DetonatorSetting;
@@ -105,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
     public static final String action = "broadcast.action";
     public static final String actionScan = "broadcast.scan.barcode";
     public static final String actionStartScan = "broadcast.start.scan";
+    public static final int batteryLow = 30;
 
     public final static String[] perms = {
             Manifest.permission.CHANGE_WIFI_STATE,
@@ -142,6 +141,8 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
     ImageView icon6;
     @BindView(R.id.divider7)
     View divider7;
+    @BindView(R.id.tvVersion)
+    TextView tvVersion;
 //    @BindView(R.id.layout_update)
 //    LinearLayout layoutUpdate;
 
@@ -157,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
     InfoDialog infoDialog;
     public byte[] fileData;
     public int fileLen;
-
+    public boolean updateEnable = true;
 
     FragmentVolt frVolt;
     CommTask commTask;
@@ -236,6 +237,7 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
     boolean firstBoot;
     private SDKReceiver mReceiver;
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.e("start", "Boot 开机自动启动");
@@ -344,7 +346,7 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
             setting.setRowDelay("0");
             setting.setCnt("1");
             setting.setRowSequence(false);
-//            FileFunc.makeDetonatorFile("default.net", setting);
+            //    FileFunc.makeDetonatorFile("default.net", setting);
             mEdit.putInt("file", 1);
             mEdit.putString("filename", "default.net");
             mEdit.apply();
@@ -376,7 +378,7 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
         observVolt = new ObservVolt(this, frVolt, getSupportFragmentManager());
         dataViewModel.volt.observe(this, observVolt);
         commTask = new CommTask(this);
-        commTask.execute(1, COMM_READ_DEV_ID, COMM_READ_DEV_VER, COMM_GET_BATT);
+        commTask.execute(1, COMM_STOP_OUTPUT, COMM_READ_DEV_ID, COMM_READ_DEV_VER, COMM_GET_BATT);
         dataViewModel.volt.setValue(100);
         firstBoot = true;
 
@@ -406,7 +408,7 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
         dataViewModel.keyHandler = null;
         keyReceiver = new KeyReceiver(this, handler, dataViewModel);
         //     keyThread.start();
-
+        tvVersion.setText("软件版本: " + UpdateUtils.getVersionName(this));
         initXHttp();
         initOKHttpUtils();
         initUpdate();
@@ -504,8 +506,9 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
         int viewId = view.getId();
         if (!checkPermission(this))
             return;
+        //dataViewModel.battPercent=90;
         if (viewId != R.id.layout_authorize && viewId != R.id.layout_setting) {
-            if (dataViewModel.battPercent < 30) {
+            if (dataViewModel.battPercent < batteryLow) {
                 InfoDialog battInfo = new InfoDialog();
                 battInfo.setTitle("警告");
                 battInfo.setMessage("电量低于30%，请充电！");
@@ -1099,34 +1102,36 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
     }
 
     private void updateDialog() {
-        try {
-            InputStream is;
-            if (UpdateUtils.getVersionCode(MainActivity.this) > 100)
-                is = getAssets().open("code.bin");
-            else
-                is = getAssets().open("code2.bin");
-            //InputStream is = getAssets().open("code.bin");
-            fileLen = ((is.available() + 7) / 8) * 8;
-            fileData = new byte[fileLen];
-            if (is.read(fileData) != 0) {
-                dataViewModel.devVer = "xxxx";
-                infoDialog = new InfoDialog();
-                infoDialog.setTitle("请勿关闭电");
-                infoDialog.setMessage("升级固件");
-                infoDialog.setProgressEnable(true);
-                infoDialog.setCancelable(false);
-                infoDialog.show(getSupportFragmentManager(), "info");
-                commTask.cancel(true);
-                commTask = new CommTask(MainActivity.this);
-                commTask.setFileData(fileData, fileLen);
-                commTask.execute(4, COMM_RESET, COMM_DELAY, COMM_DELAY, COMM_UPDATE, COMM_DELAY, COMM_DELAY, COMM_RESET);
+        if (updateEnable) {
+            try {
+                InputStream is;
+                if (UpdateUtils.getVersionCode(MainActivity.this) > 100)
+                    is = getAssets().open("code.bin");
+                else
+                    is = getAssets().open("code2.bin");
+                //InputStream is = getAssets().open("code.bin");
+                fileLen = ((is.available() + 7) / 8) * 8;
+                fileData = new byte[fileLen];
+                if (is.read(fileData) != 0) {
+                    dataViewModel.devVer = "xxxx";
+                    infoDialog = new InfoDialog();
+                    infoDialog.setTitle("请勿关闭电");
+                    infoDialog.setMessage("升级固件");
+                    infoDialog.setProgressEnable(true);
+                    infoDialog.setCancelable(false);
+                    infoDialog.show(getSupportFragmentManager(), "info");
+                    commTask.cancel(true);
+                    commTask = new CommTask(MainActivity.this);
+                    commTask.setFileData(fileData, fileLen);
+                    commTask.execute(4, COMM_RESET, COMM_DELAY, COMM_DELAY, COMM_UPDATE, COMM_DELAY, COMM_DELAY, COMM_RESET);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
-
-
 }
+
+
 
 

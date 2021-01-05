@@ -317,7 +317,7 @@ public class EncodeActivity extends AppCompatActivity implements CustomAdapt {
         switch (view.getId()) {
             case R.id.btMinus:
                 uuid--;
-                uuidStr = String.valueOf(uuid);
+                uuidStr = FileFunc.makeUuidString(uuidStr.substring(0,8), (int)(uuid / 100L), (int)(uuid % 100L));
                 etUuid.setText(uuidStr);
                 break;
             case R.id.btEncode:
@@ -325,7 +325,7 @@ public class EncodeActivity extends AppCompatActivity implements CustomAdapt {
                 break;
             case R.id.btPlus:
                 uuid++;
-                uuidStr = String.valueOf(uuid);
+                uuidStr = FileFunc.makeUuidString(uuidStr.substring(0,8), (int)(uuid / 100L), (int)(uuid % 100L));
                 etUuid.setText(uuidStr);
                 break;
         }
@@ -373,7 +373,8 @@ public class EncodeActivity extends AppCompatActivity implements CustomAdapt {
 ////                mEdit.apply();
         uuidStr = mShare.getString("detUuid", "5320409100001");
         assert uuidStr != null;
-        uuid = Long.parseLong(uuidStr);
+        uuid = Long.parseLong(uuidStr.substring((8)));
+//      uuid = Long.parseLong(uuidStr);
         etUuid.setText(uuidStr);
         password = ThreadLocalRandom.current().nextInt(0, 99999999);
         etPass.setText(String.valueOf(password));
@@ -382,7 +383,7 @@ public class EncodeActivity extends AppCompatActivity implements CustomAdapt {
 
     public void nextUuidPassword() {
         uuid++;
-        uuidStr = String.valueOf(uuid);
+        uuidStr = FileFunc.makeUuidString(uuidStr.substring(0,8), (int)(uuid / 100L), (int)(uuid % 100L));
         etUuid.setText(uuidStr);
         password = ThreadLocalRandom.current().nextInt(0, 99999999);
         etPass.setText(String.valueOf(password));

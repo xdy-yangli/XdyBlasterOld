@@ -21,6 +21,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.xdyblaster.R;
+import com.example.xdyblaster.util.AllCapTransformationMethod;
 import com.example.xdyblaster.util.DataViewModel;
 import com.example.xdyblaster.util.FileFunc;
 import com.example.xdyblaster.util.InfoDialog;
@@ -59,6 +60,7 @@ public class FragmentAuthInput extends DialogFragment {
         Bundle bundle = getArguments();
         assert bundle != null;
         uuid = bundle.getString("uuid");
+        etUuid.setTransformationMethod(new AllCapTransformationMethod());
         etUuid.setText(uuid);
         return view;
     }

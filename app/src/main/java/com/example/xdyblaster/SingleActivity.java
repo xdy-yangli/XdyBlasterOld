@@ -555,9 +555,10 @@ public class SingleActivity extends AppCompatActivity {
                         if (values[1] == 3) {
                             SharedPreferences mShare = getSharedPreferences("setting", Context.MODE_PRIVATE);
                             SharedPreferences.Editor mEdit = mShare.edit();
-                            long u = Long.parseLong(stringUuid);
+                            long u = Long.parseLong(stringUuid.substring(8));
                             u++;
-                            mEdit.putString("detUuid", String.valueOf(u));
+//                            mEdit.putString("detUuid", String.valueOf(u));
+                            mEdit.putString("detUuid", stringUuid);
                             mEdit.apply();
                         }
                     }
@@ -850,7 +851,7 @@ public class SingleActivity extends AppCompatActivity {
         commTask = new CommTask(this);
         SharedPreferences mShare = getSharedPreferences("setting", Context.MODE_PRIVATE);
         commTask.setUuid(Objects.requireNonNull(mShare.getString("detUuid", "53200328000001")));
-        commTask.execute(6, COMM_IDLE, COMM_SCAN, COMM_READ_UID, COMM_READ_AREA, COMM_GET_CURRENT, COMM_CHECK_ONLINE);
+        commTask.execute(6, COMM_IDLE, COMM_SCAN, COMM_READ_UID, COMM_READ_AREA,COMM_GET_CURRENT, COMM_CHECK_ONLINE);
     }
 
     public void scanFull() {

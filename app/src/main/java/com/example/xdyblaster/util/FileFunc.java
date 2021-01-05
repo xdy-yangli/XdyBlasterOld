@@ -278,7 +278,7 @@ public class FileFunc {
         }
     }
 
-    public static void loadDetonatorSetting(String fileName, DetonatorSetting setting) {
+    public static boolean loadDetonatorSetting(String fileName, DetonatorSetting setting) {
         File file = new File(getSDPath() + "//xdyBlaster");
         byte b;
         String tmp;
@@ -294,20 +294,28 @@ public class FileFunc {
                 str = readOneLine(dis);
 
                 index = str.indexOf(',');
+                if (index == -1)
+                    return false;
                 setting.setRow(str.substring(0, index));
                 if (setting.getRow() == 0)
                     setting.setRow(1);
                 str = str.substring(index + 1);
 
                 index = str.indexOf(',');
+                if (index == -1)
+                    return false;
                 setting.setHole(str.substring(0, index));
                 str = str.substring(index + 1);
 
                 index = str.indexOf(',');
+                if (index == -1)
+                    return false;
                 setting.setRowDelay(str.substring(0, index));
                 str = str.substring(index + 1);
 
                 index = str.indexOf(',');
+                if (index == -1)
+                    return false;
                 setting.setHoleDelay(str.substring(0, index));
                 str = str.substring(index + 1);
 
@@ -317,11 +325,14 @@ public class FileFunc {
                     setting.setRowSequence(false);
                 dis.close();
                 fis.close();
+                return true;
+
             } catch (IOException e) {
                 Log.e("open file", "打开文件失败");
                 e.printStackTrace();
             }
         }
+        return false;
     }
 
     @SuppressLint("DefaultLocale")
@@ -526,9 +537,21 @@ public class FileFunc {
         uuid[7] = (char) ((day % 10) + 0x30);
 
         StringBuilder stringBuilder = new StringBuilder();
-        for (i = 1; i < 14; i++)
-            stringBuilder.append(uuid[i]);
+        for (i = 1; i < 14; i++) {
+            if (isChar(uuid[i]))
+                stringBuilder.append(uuid[i]);
+            else
+                stringBuilder.append('?');
+        }
         return stringBuilder.toString();
+    }
+
+    public static boolean isChar(char c) {
+        if ((c >= '0') && (c <= '9'))
+            return true;
+        if ((c >= 'A') && (c <= 'Z'))
+            return true;
+        return false;
     }
 
     public static void getUuidData(byte[] b, int ofs, UuidData uuidData) {
@@ -892,11 +915,13 @@ public class FileFunc {
 
     @SuppressLint("DefaultLocale")
     public static String makeUuidString(String str, int n1, int n2) {
+        String box,f;
         String head = str.substring(0, 8);
-        String box = str.substring(8, 11);
-        String f = str.substring(11, 13);
+
         int b0, b1;
         try {
+            box = str.substring(8, 11);
+            f = str.substring(11, 13);
             b0 = Integer.parseInt(box);
             b1 = Integer.parseInt(f);
         } catch (Exception e) {

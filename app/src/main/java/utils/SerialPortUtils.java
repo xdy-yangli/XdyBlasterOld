@@ -155,6 +155,13 @@ public class SerialPortUtils {
             e.printStackTrace();
         }
         serialPort.setGPIOhigh(ioPort);
+        try {
+            Thread.sleep(500);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
     private SerialPortUtils(Context context) {

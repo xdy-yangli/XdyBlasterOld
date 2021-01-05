@@ -3,14 +3,21 @@ package com.example.xdyblaster.system;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
+import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.method.ScrollingMovementMethod;
+import android.text.style.BackgroundColorSpan;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
@@ -70,7 +77,7 @@ import static com.example.xdyblaster.util.CommDetonator.COMM_GET_ID_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_GET_UUID_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_IDLE;
 import static com.example.xdyblaster.util.CommDetonator.COMM_POWER_ON;
-import static com.example.xdyblaster.util.CommDetonator.COMM_PUT_ID_BUFFER;
+import static com.example.xdyblaster.util.CommDetonator.COMM_PUT_AREA_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_RESET_DETONATOR;
 import static com.example.xdyblaster.util.CommDetonator.COMM_STOP_OUTPUT;
 import static com.example.xdyblaster.util.CommDetonator.COMM_WAIT_PUBLISH;
@@ -104,8 +111,11 @@ public class SelfTestActivity extends AppCompatActivity implements CustomAdapt, 
     TextView tvCorrect;
     @BindView(R.id.tvError)
     TextView tvError;
+    @BindView(R.id.tvStatus)
+    EditText tvStatus;
     private DataViewModel dataViewModel;
     private List<FragmentData> fragments = new ArrayList<>();
+    public List<String> errorReport = new ArrayList<>();
     private SectionsPagerAdapter sectionsPagerAdapter;
     private int vpCount;
     private int vpNum;
@@ -235,6 +245,15 @@ public class SelfTestActivity extends AppCompatActivity implements CustomAdapt, 
         checkCorrect = 0;
         checkError = 0;
         setCheckText();
+        tvStatus.setKeyListener(null);
+        SpannableString spannableString = new SpannableString("测试记录");
+        BackgroundColorSpan colorSpan = new BackgroundColorSpan(Color.parseColor("#AC00FF30"));
+        ForegroundColorSpan colorSpan1 = new ForegroundColorSpan(Color.parseColor("#FFFF0000"));
+        spannableString.setSpan(colorSpan, 0, spannableString.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(colorSpan1, 0, spannableString.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+        tvStatus.getText().append(spannableString);
+        tvStatus.setMovementMethod(ScrollingMovementMethod.getInstance());
+        tvStatus.setSelection(tvStatus.getText().length(), tvStatus.getText().length());
 
     }
 
@@ -262,7 +281,7 @@ public class SelfTestActivity extends AppCompatActivity implements CustomAdapt, 
             int i;
             float p;
             switch (values[0]) {
-                case COMM_PUT_ID_BUFFER:
+                case COMM_PUT_AREA_BUFFER:
                     if (values[1] == 1) {
                         if (infoDialog.progressBar != null) {
                             infoDialog.progressBar.setMax(values[3]);
@@ -273,7 +292,7 @@ public class SelfTestActivity extends AppCompatActivity implements CustomAdapt, 
                     break;
                 case COMM_CHECK_NET:
                     infoDialog.progressBar.setMax(dataViewModel.detonatorDatas.size());
-                    infoDialog.progressBar.setMax(17);
+                    //infoDialog.progressBar.setMax(17);
                     infoDialog.progressBar.setProgress(0);
                     break;
                 case COMM_DETONATE_PROGRESS:
@@ -297,6 +316,9 @@ public class SelfTestActivity extends AppCompatActivity implements CustomAdapt, 
                                 infoDialog.progressBar.setProgress(17);
                                 newDetonator = d;
                                 breaking = true;
+                                break;
+                            case 10:
+                                infoDialog.progressBar.setProgress(s);
                                 break;
                         }
                         infoDialog.setMessageTxt(String.format("扫描网络 %d", s + d));
@@ -347,8 +369,10 @@ public class SelfTestActivity extends AppCompatActivity implements CustomAdapt, 
                                 }
                                 if (color == 0)
                                     color = 0x80;
-                                else
+                                else {
                                     errCount++;
+                                    //          tvStatus.getText().append("\n" + dataViewModel.detonatorDatas.get(i).getUuid());
+                                }
                                 dataViewModel.detonatorDatas.get(i).setColor(color);
                             }
                             setTotalCount(newDetonator, 0);
@@ -366,6 +390,7 @@ public class SelfTestActivity extends AppCompatActivity implements CustomAdapt, 
                             Log.e("read ", String.valueOf(values[2]) + " " + String.valueOf(values[3]));
                             if (values[2].equals(values[3])) {
                                 DetonatorData detonatorData;
+                                errorReport.clear();
                                 for (i = 0; i < newDetonator; i++) {
                                     UuidData uuidData = new UuidData();
                                     getUuidData(dataViewModel.uuidBuffer, 16 * i, uuidData);
@@ -389,33 +414,42 @@ public class SelfTestActivity extends AppCompatActivity implements CustomAdapt, 
                                             }
                                             if (color == 0)
                                                 color = 0x80;
-                                            else
+                                            else {
+                                                //  tvStatus.getText().append("\n" + uuidData.getUuid() + " 数据错误");
+
                                                 errCount++;
+                                            }
                                             dataViewModel.detonatorDatas.get(j).setColor(color);
                                             break;
                                         }
                                     }
-                                    if (j == dataViewModel.detonatorDatas.size()) {
-                                        detonatorData = new DetonatorData();
-                                        detonatorData.setId(uuidData.getId());
-                                        detonatorData.setRowNum(uuidData.getArea());
-                                        detonatorData.setHoleNum(uuidData.getNum());
-                                        detonatorData.setBlasterTime(uuidData.getDelay() - BLASTER_TIMER_DELAY);
-                                        detonatorData.setUuid(uuidData.getUuid());
-                                        detonatorData.setColor(0x40);
-                                        dataViewModel.detonatorDatas.add(detonatorData);
-                                    }
+
                                 }
                                 waitPublish = false;
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
+                                        errCount = 0;
+                                        int c;
+                                        String str;
+                                        for (int i = 0; i < dataViewModel.detonatorDatas.size(); i++) {
+                                            if (dataViewModel.detonatorDatas.get(i).getColor() != 0x80) {
+                                                c = dataViewModel.detonatorDatas.get(i).getColor();
+                                                if (c == 0x1f)
+                                                    tvStatus.getText().append("\n" + dataViewModel.detonatorDatas.get(i).getUuid() + " 扫描错误");
+                                                else {
+                                                    str = String.format("%02X", c);
+                                                    tvStatus.getText().append("\n" + dataViewModel.detonatorDatas.get(i).getUuid() + " 数据错误 " + str);
+                                                }
+                                                errCount++;
+                                            }
+                                        }
                                         battEnable = true;
                                         infoDialog.dismissAllowingStateLoss();
                                         FragmentLoad fragmentLoad = new FragmentLoad();
                                         fragmentLoad.setCancelable(false);
                                         fragmentLoad.show(getSupportFragmentManager(), "load");
-                                        if(errCount!=0)
+                                        if (errCount != 0)
                                             checkError++;
                                         else
                                             checkCorrect++;
@@ -688,8 +722,8 @@ public class SelfTestActivity extends AppCompatActivity implements CustomAdapt, 
                 commTask.cancel(true);
                 commTask = new CommTask(SelfTestActivity.this);
                 commTask.setTotalCount(dataViewModel.detonatorDatas.size(), 0);
-                commTask.execute(8, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_RESET_DETONATOR,
-                        COMM_PUT_ID_BUFFER, COMM_CHECK_NET, COMM_DETONATE_PROGRESS, COMM_GET_ID_BUFFER, COMM_WAIT_PUBLISH, COMM_GET_UUID_BUFFER, COMM_WAIT_PUBLISH, COMM_IDLE, COMM_STOP_OUTPUT);
+                commTask.execute(8, COMM_IDLE, COMM_DELAY, COMM_DELAY, COMM_POWER_ON, COMM_DELAY,// COMM_RESET_DETONATOR,
+                        COMM_PUT_AREA_BUFFER, COMM_CHECK_NET,COMM_DELAY, COMM_DETONATE_PROGRESS, COMM_GET_ID_BUFFER, COMM_WAIT_PUBLISH, COMM_GET_UUID_BUFFER, COMM_WAIT_PUBLISH, COMM_IDLE, COMM_STOP_OUTPUT);
                 viewFlag = 0x0ff;
                 showResult = true;
 
@@ -770,6 +804,12 @@ public class SelfTestActivity extends AppCompatActivity implements CustomAdapt, 
 //                commTask.cancel(true);
 //                commTask = new CommTask(SelfTestActivity.this);
 //                commTask.execute(8, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_DOWNLOAD_DATA, COMM_IDLE, COMM_STOP_OUTPUT);
+                SpannableString spannableString = new SpannableString("测试记录");
+                BackgroundColorSpan colorSpan = new BackgroundColorSpan(Color.parseColor("#AC00FF30"));
+                ForegroundColorSpan colorSpan1 = new ForegroundColorSpan(Color.parseColor("#FFFF0000"));
+                spannableString.setSpan(colorSpan, 0, spannableString.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+                spannableString.setSpan(colorSpan1, 0, spannableString.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+                tvStatus.setText(spannableString);
                 checkCorrect = 0;
                 checkError = 0;
                 setCheckText();

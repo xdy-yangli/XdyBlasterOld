@@ -70,12 +70,24 @@ public class ObservVolt implements Observer<Integer> {
                     if (dataViewModel.commErr >= 5) {
                         InfoDialog infoDialog = new InfoDialog();
                         infoDialog.setTitle("通信错误");
-                        infoDialog.setMessage("请检查设备电源是否打开！");
+                        //infoDialog.setMessage("请检查设备电源是否打开！");
+                        infoDialog.setMessage("请检查总线是否过载！");
                         infoDialog.setBtnEnable(true);
+                        Thread thread = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+
+                                //serialPortUtils.ResetBlaster();
+                            }
+                        });
+                        thread.start();
                         infoDialog.setOnButtonClickListener(new InfoDialog.OnButtonClickListener() {
                             @Override
                             public void onButtonClick(int index, String str) {
                                 dataViewModel.commErr = 0;
+                                dataViewModel.exit.postValue(1000);
+                                //dataViewModel.reset=true;
+                                //dataViewModel.overCurrent.postValue(1000);
                             }
                         });
                         infoDialog.show(fragmentManager, "info");
@@ -131,6 +143,7 @@ public class ObservVolt implements Observer<Integer> {
         if (frVolt != null)
             try {
                 frVolt.tvVolt.setText(String.format("电压 %.1fv", aFloat));
+                dataViewModel.voltFloat=aFloat;
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -140,6 +153,7 @@ public class ObservVolt implements Observer<Integer> {
         if (frVolt != null)
             try {
                 frVolt.tvCurr.setText(String.format("电流 %.1fma", aFloat));
+                dataViewModel.currFloat=aFloat;
             } catch (Exception e) {
                 e.printStackTrace();
             }

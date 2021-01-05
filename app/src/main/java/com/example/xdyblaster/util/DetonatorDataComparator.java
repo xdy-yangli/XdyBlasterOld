@@ -30,14 +30,16 @@ public class DetonatorDataComparator implements Comparator<DetonatorData> {
                     s = o1.getHoleNum() - o2.getHoleNum();
                     break;
                 }
-                l1 = Long.parseLong(o1.getUuid());
-                l2 = Long.parseLong(o2.getUuid());
-                s = Long.compare(l1, l2);
+                s = o1.getUuid().compareTo(o2.getUuid());
+//                l1 = Long.parseLong(o1.getUuid().substring(8));
+//                l2 = Long.parseLong(o2.getUuid().substring(8));
+//                s = Long.compare(l1, l2);
                 break;
             case 1:
-                l1 = Long.parseLong(o1.getUuid());
-                l2 = Long.parseLong(o2.getUuid());
-                s = Long.compare(l1, l2);
+//                l1 = Long.parseLong(o1.getUuid().substring(8));
+//                l2 = Long.parseLong(o2.getUuid().substring(8));
+//                s = Long.compare(l1, l2);
+                s = o1.getUuid().compareTo(o2.getUuid());
                 break;
             case 2:
                 if (o1.getRowNum() != o2.getRowNum()) {
@@ -52,9 +54,10 @@ public class DetonatorDataComparator implements Comparator<DetonatorData> {
                     s = o1.getBlasterTime() - o2.getBlasterTime();
                     break;
                 }
-                l1 = Long.parseLong(o1.getUuid());
-                l2 = Long.parseLong(o2.getUuid());
-                s = Long.compare(l1, l2);
+                s = o1.getUuid().compareTo(o2.getUuid());
+//                l1 = Long.parseLong(o1.getUuid().substring(8));
+//                l2 = Long.parseLong(o2.getUuid().substring(8));
+//                s = Long.compare(l1, l2);
                 break;
             case 3:
                 if (o1.getHoleNum() != o2.getHoleNum()) {
@@ -69,9 +72,10 @@ public class DetonatorDataComparator implements Comparator<DetonatorData> {
                     s = o1.getBlasterTime() - o2.getBlasterTime();
                     break;
                 }
-                l1 = Long.parseLong(o1.getUuid());
-                l2 = Long.parseLong(o2.getUuid());
-                s = Long.compare(l1, l2);
+                s = o1.getUuid().compareTo(o2.getUuid());
+//                l1 = Long.parseLong(o1.getUuid().substring(8));
+//                l2 = Long.parseLong(o2.getUuid().substring(8));
+//                s = Long.compare(l1, l2);
                 break;
         }
         if (sortUpDown == 0)

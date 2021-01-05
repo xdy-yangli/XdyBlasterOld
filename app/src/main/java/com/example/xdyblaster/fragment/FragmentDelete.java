@@ -261,14 +261,14 @@ public class FragmentDelete extends DialogFragment {
                         }
 
                         DetonatorData detonatorData;
-                        long id = Long.parseLong(uuidStr);
+                        long id = Long.parseLong(uuidStr.substring(8));
                         for (i = 0; i < end; i++) {
                             detonatorData = new DetonatorData(row);
                             detonatorData.setBlasterTime(delay);
                             detonatorData.setDelay(change);
                             detonatorData.setHoleNum(start + i);
                             detonatorData.setId(0);
-                            detonatorData.setUuid(String.valueOf(id));
+                            detonatorData.setUuid(FileFunc.makeUuidString(uuidStr.substring(0,8), (int) (id / 100L), (int) (id % 100L)));
                             id++;
                             delay += change;
                             dataViewModel.detonatorList.get(0).add(detonatorData);

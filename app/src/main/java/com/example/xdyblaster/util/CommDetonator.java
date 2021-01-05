@@ -95,6 +95,7 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
     public static final int COMM_POWER_9V = 50;
     public static final int COMM_POWER_12V = 51;
     public static final int COMM_POWER_24V = 52;
+    public static final int COMM_PUT_AREA_BUFFER = 53;
     public SerialPortUtils serialPortUtils;
     public DataViewModel dataViewModel;
     private int ack, devStatus, index, detonatorStatus;
@@ -152,6 +153,11 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
             delayMs(10);
         }
         Log.e("commTask org", "start thread");
+//        if(dataViewModel.reset) {
+//            serialPortUtils.ResetBlaster();
+//            dataViewModel.reset=false;
+//        }
+
         int i, max;
         max = value.length;
         running = true;
@@ -161,7 +167,7 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
         for (i = 1; i < max; i++) {
             if (isCancelled() || !running) {
                 running = false;
-                Log.e("commTask org", "thread end");
+//                Log.e("commTask org", "thread end");
                 return -1;
             } else {
                 if (!job.get(i))
@@ -256,7 +262,10 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
                 sendSingleCommand(DEV_IDLE, _MODBUS_WRITE);
                 break;
             case COMM_PUT_ID_BUFFER:
-                putDetonatorID();
+                putDetonatorID(0);
+                break;
+            case COMM_PUT_AREA_BUFFER:
+                putDetonatorID(1);
                 break;
             case COMM_CHECK_NET:
                 sendSingleCommand(DEV_CHECK_NET, _MODBUS_WRITE);
@@ -265,12 +274,13 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
             case COMM_BLIND_SCAN_PROGRESS:
                 while (!isCancelled() && running && !breaking) {
                     sendSingleCommand(DEV_DETONATE_STEP, _MODBUS_READ);
+                    delayMs(100);
                     if (!isCancelled() && running && !breaking) {
                         publishSuccess = false;
                         getBattery(0);
                         publishSuccess = true;
                     }
-                    delayMs(200);
+                    delayMs(100);
                 }
                 break;
             case COMM_GET_ID_BUFFER:
@@ -346,8 +356,6 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
                 }
                 break;
             case COMM_RESET_DETONATOR:
-
-
                 sendSingleCommand(DEV_DET_RESET, _MODBUS_WRITE);
                 delayMs(200);
                 break;
@@ -706,7 +714,7 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
         }
     }
 
-    public void putDetonatorID() {
+    public void putDetonatorID(int t) {
         serialPortUtils.setOnDataReceiveListener(new SerialPortUtils.OnDataReceiveListener() {
             @Override
             public void ReceiveNoAck(boolean sendStop) {
@@ -721,7 +729,7 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
                 ack = 1;
             }
         });
-        int i;
+        int i, time, hole, area;
         serialPortUtils.uartData.count = 0;
         serialPortUtils.uartData.total = dataViewModel.detonatorDatas.size();
         if (serialPortUtils.uartData.total == 0)
@@ -732,7 +740,12 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
             ack = 0;
             serialPortUtils.uartData.macid = dataViewModel.detonatorDatas.get(serialPortUtils.uartData.count).getId();
             serialPortUtils.uartData.blasterTimer = dataViewModel.detonatorDatas.get(serialPortUtils.uartData.count).getBlasterTime();
-            sendCommand(DEV_PUT_ID, _MODBUS_WRITE, (byte) 1);
+            serialPortUtils.uartData.area = dataViewModel.detonatorDatas.get(serialPortUtils.uartData.count).getRowNum();
+            serialPortUtils.uartData.hole = dataViewModel.detonatorDatas.get(serialPortUtils.uartData.count).getHoleNum();
+            if (t == 0)
+                sendCommand(DEV_PUT_ID, _MODBUS_WRITE, (byte) 1);
+            else
+                sendCommand(DEV_PUT_AREA, _MODBUS_WRITE, (byte) 1);
             i = waitDeviceAck();
             if (i == 1) {
                 serialPortUtils.uartData.count++;
@@ -753,6 +766,7 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
             }
         }
     }
+
 
     public void getDetonatorID() {
         serialPortUtils.setOnDataReceiveListener(new SerialPortUtils.OnDataReceiveListener() {
@@ -1039,16 +1053,29 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
     public int delayMs(int ms) {
 
         long end;
+//        int s=0;
         end = System.currentTimeMillis() + ms;
-        while (!isCancelled() && running) {
-            if (end < System.currentTimeMillis())
-                break;
-        }
-        if (isCancelled())
-            return 0;
-        else
-            return 1;
+        try {
+            while (!isCancelled() && running) {
+                if (end < System.currentTimeMillis())
+                    break;
+//
+//                try {
+//                    Thread.sleep(1);
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    return 0;
+//                }
 
+            }
+            if (isCancelled())
+                return 0;
+            else
+                return 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     public int waitDeviceAck() {
@@ -1318,6 +1345,8 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
                     time = System.currentTimeMillis() + 500;
                 else
                     time = System.currentTimeMillis() + 2000;
+                if (cmd == DEV_COUNT_DOWN)
+                    time = System.currentTimeMillis() + 200;
                 while (!isCancelled() && running) {
                     length = serialPortUtils.inputStream.available();
                     if (length == 19) {

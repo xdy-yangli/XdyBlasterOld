@@ -44,6 +44,7 @@ import com.example.xdyblaster.util.ObservOverCurrent;
 import com.example.xdyblaster.util.ObservVolt;
 import com.example.xdyblaster.util.SharedPreferencesUtils;
 import com.example.xdyblaster.util.UuidData;
+import com.xuexiang.xupdate.utils.UpdateUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,6 +68,7 @@ import static com.example.xdyblaster.util.CommDetonator.COMM_GET_ID_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_GET_UUID_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_IDLE;
 import static com.example.xdyblaster.util.CommDetonator.COMM_POWER_ON;
+import static com.example.xdyblaster.util.CommDetonator.COMM_PUT_AREA_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_PUT_ID_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_READ_DEV_ID;
 import static com.example.xdyblaster.util.CommDetonator.COMM_RESET_DETONATOR;
@@ -123,11 +125,14 @@ public class DetonateActivity extends AppCompatActivity {
     int detonateStep = 0;
     int newDetonator;
     boolean isFocus = false;
+    public boolean exiting = false;
     //    LocationClient mLocClient;
 //    public MyLocationListenner myListener = new MyLocationListenner();
 //    LatLng latLng = null;
     boolean charged = false;
     public boolean counting = false;
+    long debounceTime = 0;
+    public boolean countDownRunning = false;
 //    LocationClientOption option = new LocationClientOption();
 
     @SuppressLint("HandlerLeak")
@@ -149,7 +154,7 @@ public class DetonateActivity extends AppCompatActivity {
                     if ((ltStart.getVisibility() == View.VISIBLE) && startEnable)
                         btStart.performClick();
 
-                    if (ltDetonate.getVisibility() == View.VISIBLE) {
+                    if ((ltDetonate.getVisibility() == View.VISIBLE) && !counting && !exiting) {
                         if (msg.arg1 == 1) {
                             btF1.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.red_btn));
                             f1 = true;
@@ -164,7 +169,7 @@ public class DetonateActivity extends AppCompatActivity {
                 case 132:
                     if (!isFocus)
                         break;
-                    if (ltDetonate.getVisibility() == View.VISIBLE) {
+                    if ((ltDetonate.getVisibility() == View.VISIBLE) && !counting && !exiting) {
                         if (msg.arg1 == 1) {
                             btF2.setBackground(ContextCompat.getDrawable(getApplicationContext(), R.drawable.red_btn));
                             f2 = true;
@@ -341,7 +346,9 @@ public class DetonateActivity extends AppCompatActivity {
         dataViewModel.htid = (String) SharedPreferencesUtils.getParam(this, "htid", "0");
         dataViewModel.xmbh = (String) SharedPreferencesUtils.getParam(this, "xmbh", "");
         dataViewModel.userId = (String) SharedPreferencesUtils.getParam(this, "bprysfz", "0");
-        // FileFunc.saveDetonateResult(dataViewModel);
+        //FileFunc.saveDetonateResult(dataViewModel);
+        if (UpdateUtils.getVersionCode(DetonateActivity.this) < 100)
+            dataViewModel.systemCount = 10;
 
     }
 
@@ -411,14 +418,20 @@ public class DetonateActivity extends AppCompatActivity {
 
     @OnClick({R.id.btStart, R.id.btF1, R.id.btF2, R.id.btExit})
     public void onViewClicked(View view) {
+        if ((System.currentTimeMillis() - debounceTime) > 1000)
+            debounceTime = System.currentTimeMillis();
+        else
+            return;
         switch (view.getId()) {
             case R.id.btStart:
+                btStart.setEnabled(false);
 //                // String str = (String) SharedPreferencesUtils.getParam(DetonateActivity.this, "volt", "0");
                 if ((float) SharedPreferencesUtils.getParam(DetonateActivity.this, "volt", 0.0f) < 20) {
                     infoDialog = new InfoDialog();
                     infoDialog.setTitle("故障");
                     infoDialog.setMessage("电压设定低于23伏！");
                     infoDialog.show(getSupportFragmentManager(), "info");
+                    btStart.setEnabled(true);
                     break;
                 }
 
@@ -427,6 +440,7 @@ public class DetonateActivity extends AppCompatActivity {
                     battEnable = false;
                     startEnable = false;
                     infoDialog = new InfoDialog();
+                    infoDialog.setVoltEnable(true);
                     infoDialog.setTitle("网络充电");
                     infoDialog.setMessage("传输数据");
                     infoDialog.setCancelable(false);
@@ -448,7 +462,9 @@ public class DetonateActivity extends AppCompatActivity {
                     commTask = new CommTask(DetonateActivity.this);
                     commTask.setTotalCount(dataViewModel.detonatorDatas.size(), 0);
                     commTask.execute(7, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_PUT_ID_BUFFER, COMM_DETONATE, COMM_DETONATE_PROGRESS, COMM_GET_ID_BUFFER, COMM_IDLE);
+                    btStart.setEnabled(true);
                 } else {
+                    exiting = false;
                     dataViewModel.fileReload = true;
                     for (int i = dataViewModel.detonatorDatas.size() - 1; i >= 0; i--)
                         if (dataViewModel.detonatorDatas.get(i).getColor() == 0x40)
@@ -458,6 +474,7 @@ public class DetonateActivity extends AppCompatActivity {
                         infoDialog.setTitle("故障");
                         infoDialog.setMessage("延时方案无数据");
                         infoDialog.show(getSupportFragmentManager(), "info");
+                        btStart.setEnabled(true);
                         break;
                     }
 
@@ -478,8 +495,14 @@ public class DetonateActivity extends AppCompatActivity {
                     commTask.cancel(true);
                     commTask = new CommTask(DetonateActivity.this);
                     commTask.setTotalCount(dataViewModel.detonatorDatas.size(), 0);
-                    commTask.execute(8, COMM_IDLE, COMM_USER_DEFINE, COMM_WAIT_PUBLISH, COMM_READ_DEV_ID, COMM_POWER_ON, COMM_DELAY, COMM_RESET_DETONATOR,
-                            COMM_PUT_ID_BUFFER, COMM_CHECK_NET, COMM_DETONATE_PROGRESS, COMM_GET_ID_BUFFER, COMM_WAIT_PUBLISH, COMM_GET_UUID_BUFFER, COMM_WAIT_PUBLISH, COMM_IDLE, COMM_STOP_OUTPUT);
+
+                    if (UpdateUtils.getVersionCode(DetonateActivity.this) > 100)
+                        commTask.execute(8, COMM_IDLE, COMM_USER_DEFINE, COMM_WAIT_PUBLISH, COMM_READ_DEV_ID, COMM_POWER_ON, COMM_DELAY, COMM_RESET_DETONATOR,
+                                COMM_PUT_AREA_BUFFER, COMM_CHECK_NET, COMM_DETONATE_PROGRESS, COMM_GET_ID_BUFFER, COMM_WAIT_PUBLISH, COMM_GET_UUID_BUFFER, COMM_WAIT_PUBLISH, COMM_IDLE, COMM_STOP_OUTPUT);
+                    else
+                        commTask.execute(8, COMM_IDLE, COMM_USER_DEFINE, COMM_WAIT_PUBLISH, COMM_READ_DEV_ID, COMM_POWER_ON, COMM_DELAY, COMM_RESET_DETONATOR,
+                                COMM_PUT_AREA_BUFFER, COMM_CHECK_NET, COMM_DETONATE_PROGRESS, COMM_GET_ID_BUFFER, COMM_WAIT_PUBLISH, COMM_GET_UUID_BUFFER, COMM_WAIT_PUBLISH, COMM_IDLE, COMM_POWER_ON);
+
 //                    viewFlag = 0x0ff;
 //                    showResult = true;
 
@@ -493,10 +516,14 @@ public class DetonateActivity extends AppCompatActivity {
 
 
     public void checkStartCountDown() {
+        if (counting || exiting)
+            return;
         if (f1 && f2) {
             counting = true;
+            battEnable = false;
+            commEnable = false;
+            commTask.cancel(true);
             Thread thread = new Thread(new Runnable() {
-
                 @Override
                 public void run() {
 
@@ -528,13 +555,14 @@ public class DetonateActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-
                             final Animation anim = AnimationUtils.loadAnimation(DetonateActivity.this, R.anim.bigger);
                             anim.setFillAfter(true);
                             ivCountDown.setImageDrawable(getDrawable(R.mipmap.numeric_2_circle));
                             ivCountDown.startAnimation(anim);
-                            commTask.cancel(true);
+                            //commTask.cancel(true);
+                            countDownRunning = false;
                             commTask = new CommTask(DetonateActivity.this);
+                            dataViewModel.countOK = 0;
                             if (dataViewModel.countDown != -1000)
                                 commTask.execute(1, COMM_COUNT_DOWN);
                             try {
@@ -547,6 +575,12 @@ public class DetonateActivity extends AppCompatActivity {
                     counting = delayMs(900);
                     if (!counting)
                         return;
+                    if (dataViewModel.countOK != 1) {
+                        if ((dataViewModel.countOK == -1) || (countDownRunning == false)) {
+                            dataViewModel.offline.postValue(-1000);
+                            return;
+                        }
+                    }
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -586,10 +620,10 @@ public class DetonateActivity extends AppCompatActivity {
                     });
                 }
             });
-            thread.start();
             battEnable = false;
             f1 = false;
             f2 = false;
+            thread.start();
         }
     }
 
@@ -622,6 +656,8 @@ public class DetonateActivity extends AppCompatActivity {
 
         @Override
         public void runInBackground(Integer s) {
+            if (s == COMM_COUNT_DOWN)
+                countDownRunning = true;
             if (s == COMM_USER_DEFINE) {
                 loadDetonatorFile(dataViewModel.fileName, dataViewModel.detonatorSetting, dataViewModel.detonatorDatas);
                 for (DetonatorData d : dataViewModel.detonatorDatas) {
@@ -647,6 +683,9 @@ public class DetonateActivity extends AppCompatActivity {
             float p;
             if (detonateStep == 1)
                 switch (values[0]) {
+                    case COMM_COUNT_DOWN:
+                        dataViewModel.countOK = 1;
+                        break;
                     case COMM_PUT_ID_BUFFER:
                         if (values[1] == 1) {
                             if (infoDialog.progressBar != null) {
@@ -672,21 +711,26 @@ public class DetonateActivity extends AppCompatActivity {
                                         infoDialog.setMessageTxt(String.format("检查雷管(%d/%d)", i + 1, dataViewModel.detonatorDatas.size()));
                                         break;
                                     case 1:
-                                        infoDialog.setMessageTxt(String.format("设定延时(%d/%d)", i + 1, dataViewModel.detonatorDatas.size()));
-                                        break;
-                                    case 2:
                                         p = i * 100.0f;
                                         p = p / 256;
-                                        infoDialog.setMessageTxt("计算延时");
+                                        infoDialog.setMessageTxt(String.format("频率校准"));
+                                        break;
+                                    case 2:
+                                        infoDialog.setMessageTxt(String.format("频率校准(%d/%d)", i + 1, dataViewModel.detonatorDatas.size()));
                                         break;
                                     case 3:
-                                        infoDialog.setMessageTxt(String.format("充电(%d/%d)", i + 1, dataViewModel.detonatorDatas.size()));
+                                        p = i * 100.0f;
+                                        p = p / 256;
+                                        infoDialog.setMessageTxt("设定延时");
                                         break;
                                     case 4:
-                                        p = i * 100.0f;
-                                        p = p / 10;
-                                        infoDialog.setMessageTxt(String.format("充电 %d", values[4]));
+                                        infoDialog.setMessageTxt(String.format("单发充电(%d/%d)", i + 1, dataViewModel.detonatorDatas.size()));
                                         break;
+//                                    case 4:
+//                                        p = i * 100.0f;
+//                                        p = p / 10;
+//                                        infoDialog.setMessageTxt(String.format("充电 %d", values[4]));
+//                                        break;
                                     case 5:
                                     case 6:
                                         infoDialog.setMessageTxt(String.format("检查雷管状态(%d/%d)", i + 1, dataViewModel.detonatorDatas.size()));
@@ -795,6 +839,7 @@ public class DetonateActivity extends AppCompatActivity {
                         infoDialog.setLogoColor(0);
                         infoDialog.setTitle("检查网络");
                         infoDialog.setMessage("传输数据");
+                        infoDialog.setVoltEnable(true);
                         infoDialog.setProgressEnable(true);
                         infoDialog.setCancelable(false);
                         infoDialog.setBtn2Enable(true);
@@ -812,7 +857,7 @@ public class DetonateActivity extends AppCompatActivity {
                         waitPublish = false;
                         break;
 
-                    case COMM_PUT_ID_BUFFER:
+                    case COMM_PUT_AREA_BUFFER:
                         if (values[1] == 1) {
                             if (infoDialog.progressBar != null) {
                                 infoDialog.progressBar.setMax(values[3]);
@@ -833,19 +878,38 @@ public class DetonateActivity extends AppCompatActivity {
                             int j = (values[2] >> 16) & 0x0ff;
                             int d = values[2] & 0x0ffff;
                             int s = values[4] & 0x0ffff;
+                            float f = j;
+
                             switch (i) {
                                 case 0:
+
+                                    break;
                                 case 1:
-                                    infoDialog.progressBar.setMax(17);
-                                    infoDialog.progressBar.setProgress(j);
+                                    infoDialog.progressBar.setMax(100);
+                                    infoDialog.progressBar.setProgress((float) (f * 40.0 / 16));
                                     break;
                                 case 2:
+                                    infoDialog.progressBar.setMax(100);
+                                    infoDialog.progressBar.setProgress((float) (f * 20.0 / 16 + 40));
+                                    break;
                                 case 3:
+                                    infoDialog.progressBar.setMax(100);
+                                    infoDialog.progressBar.setProgress((float) (f * 10.0 / 16 + 60));
+                                    break;
                                 case 4:
-                                    infoDialog.progressBar.setMax(17);
-                                    infoDialog.progressBar.setProgress(16);
+                                    infoDialog.progressBar.setMax(100);
+                                    infoDialog.progressBar.setProgress((float) (f * 10.0 / 16 + 70));
                                     break;
                                 case 5:
+                                    infoDialog.progressBar.setMax(100);
+                                    infoDialog.progressBar.setProgress((float) (f * 10.0 / 16 + 80));
+                                    break;
+                                case 6:
+                                    infoDialog.progressBar.setMax(100);
+                                    infoDialog.progressBar.setProgress((float) (f * 10.0 / 16 + 90));
+                                    break;
+                                case 7:
+                                    infoDialog.progressBar.setProgress(100);
                                     infoDialog.progressBar.setMax(17);
                                     infoDialog.progressBar.setProgress(17);
                                     newDetonator = d;
@@ -854,8 +918,6 @@ public class DetonateActivity extends AppCompatActivity {
                                 case 10:
                                     infoDialog.progressBar.setProgress(s);
                                     break;
-
-
 
                             }
                             infoDialog.setMessageTxt(String.format("扫描网络 %d", s + d));
@@ -1022,6 +1084,7 @@ public class DetonateActivity extends AppCompatActivity {
                 }
             if (detonateStep == 2)
                 switch (values[0]) {
+
                     case COMM_PUT_ID_BUFFER:
                         if (values[1] == 1) {
                             if (infoDialog.progressBar != null) {
@@ -1060,6 +1123,7 @@ public class DetonateActivity extends AppCompatActivity {
 
                         break;
                 }
+
             commEnable = true;
         }
 
@@ -1072,6 +1136,7 @@ public class DetonateActivity extends AppCompatActivity {
 
             }
             commEnable = true;
+            btStart.setEnabled(true);
             if (step != COMM_GET_BATT) {
                 battEnable = true;
             }
@@ -1081,6 +1146,7 @@ public class DetonateActivity extends AppCompatActivity {
         @Override
         protected void onCancelled() {
             commEnable = true;
+            btStart.setEnabled(true);
             if (step != COMM_GET_BATT) {
                 battEnable = true;
             }
@@ -1091,12 +1157,14 @@ public class DetonateActivity extends AppCompatActivity {
         @Override
         protected void onCancelled(Integer integer) {
             commEnable = true;
+            btStart.setEnabled(true);
             if (step != COMM_GET_BATT) {
                 battEnable = true;
             }
             Log.e("commTask", "close thread");
             serialPortUtils.sendStop = true;
         }
+
     }
 
     @SuppressLint("DefaultLocale")
@@ -1169,8 +1237,9 @@ public class DetonateActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (counting)
+        if (counting || f1 || f2)
             return;
+        exiting = true;
         if (charged) {
             dischargeDetonater();
         } else
@@ -1178,19 +1247,43 @@ public class DetonateActivity extends AppCompatActivity {
     }
 
     public void dischargeDetonater() {
-        charged = false;
-        battEnable = false;
-        commTask.cancel(true);
-        commTask = new CommTask(this);
-        detonateStep = 2;
-        infoDialog = new InfoDialog();
-        infoDialog.setProgressEnable(true);
-        infoDialog.setChronometerEnable(true);
-        infoDialog.setTitle("安全退出");
-        infoDialog.setMessage("雷管放电");
-        infoDialog.setCancelable(false);
-        infoDialog.show(getSupportFragmentManager(), "info");
-        commTask.execute(1, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_PUT_ID_BUFFER, COMM_ALL_DISCHARGE, COMM_DETONATE_PROGRESS, COMM_STOP_OUTPUT);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                InfoDialog confirm = new InfoDialog();
+                confirm.setTitle("请确认");
+                confirm.setMessage("是否退出起爆流程？");
+                confirm.setCancelable(false);
+                confirm.setBtnEnable(true);
+                confirm.setOnButtonClickListener(new InfoDialog.OnButtonClickListener() {
+                    @Override
+                    public void onButtonClick(int index, String str) {
+                        if (index == 1) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    charged = false;
+                                    battEnable = false;
+                                    commTask.cancel(true);
+                                    commTask = new CommTask(DetonateActivity.this);
+                                    detonateStep = 2;
+                                    infoDialog = new InfoDialog();
+                                    infoDialog.setProgressEnable(true);
+                                    infoDialog.setChronometerEnable(true);
+                                    infoDialog.setTitle("安全退出");
+                                    infoDialog.setMessage("雷管放电");
+                                    infoDialog.setCancelable(false);
+                                    infoDialog.show(getSupportFragmentManager(), "info");
+                                    commTask.execute(1, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_PUT_ID_BUFFER, COMM_ALL_DISCHARGE, COMM_DETONATE_PROGRESS, COMM_STOP_OUTPUT);
+                                }
+                            });
+                        } else
+                            exiting = false;
+                    }
+                });
+                confirm.show(getSupportFragmentManager(), "info");
+            }
+        });
     }
 
     public static void setBackgroundAlpha(Activity activity, float bgAlpha) {

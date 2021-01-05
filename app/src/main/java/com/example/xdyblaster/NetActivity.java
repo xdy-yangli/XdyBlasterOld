@@ -73,6 +73,7 @@ import static com.example.xdyblaster.util.CommDetonator.COMM_GET_ID_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_GET_UUID_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_IDLE;
 import static com.example.xdyblaster.util.CommDetonator.COMM_POWER_ON;
+import static com.example.xdyblaster.util.CommDetonator.COMM_PUT_AREA_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_PUT_ID_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_RESET_DETONATOR;
 import static com.example.xdyblaster.util.CommDetonator.COMM_STOP_OUTPUT;
@@ -224,6 +225,10 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
             @Override
             public void onChanged(@Nullable Integer integer) {
                 if (integer == 1000) {
+                    dataViewModel.exit.setValue(1);
+                    finish();
+                }
+                if (integer == 2000) {
                     dataViewModel.exit.setValue(1);
                     finish();
                 }
@@ -379,15 +384,18 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
     @OnClick({R.id.bt_start, R.id.bt_view, R.id.bt_download})
     public void onViewClicked(View view) {
         Bundle bundle;
-        if ((System.currentTimeMillis() - debounceTime) > 200)
+        if ((System.currentTimeMillis() - debounceTime) > 1000)
             debounceTime = System.currentTimeMillis();
         else
             return;
+
         switch (view.getId()) {
             case R.id.bt_start:
+                enableButton(false);
                 battEnable = false;
                 infoDialog = new InfoDialog();
                 infoDialog.setLogoColor(0);
+                infoDialog.setVoltEnable(true);
                 infoDialog.setTitle("组网测试");
                 infoDialog.setMessage("传输数据");
                 infoDialog.setProgressEnable(true);
@@ -431,7 +439,7 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
                 commTask = new CommTask(NetActivity.this);
                 commTask.setTotalCount(dataViewModel.detonatorDatas.size(), 0);
                 commTask.execute(8, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_RESET_DETONATOR,
-                        COMM_PUT_ID_BUFFER, COMM_CHECK_NET, COMM_DETONATE_PROGRESS, COMM_GET_ID_BUFFER, COMM_WAIT_PUBLISH, COMM_GET_UUID_BUFFER, COMM_WAIT_PUBLISH, COMM_IDLE, COMM_STOP_OUTPUT);
+                        COMM_PUT_AREA_BUFFER, COMM_CHECK_NET, COMM_DETONATE_PROGRESS, COMM_GET_ID_BUFFER, COMM_WAIT_PUBLISH, COMM_GET_UUID_BUFFER, COMM_WAIT_PUBLISH, COMM_IDLE, COMM_STOP_OUTPUT);
                 viewFlag = 0x0ff;
                 showResult = true;
 
@@ -491,6 +499,8 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
                 fragmentResult.show(getSupportFragmentManager(), "result");
                 break;
             case R.id.bt_download:
+                enableButton(false);
+                battEnable = false;
                 infoDialog = new InfoDialog();
                 infoDialog.setTitle("同步数据");
                 infoDialog.setMessage("传输数据");
@@ -511,6 +521,7 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
                 commTask.cancel(true);
                 commTask = new CommTask(NetActivity.this);
                 commTask.execute(8, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_DOWNLOAD_DATA, COMM_IDLE, COMM_STOP_OUTPUT);
+                enableButton(false);
                 break;
         }
     }
@@ -534,7 +545,7 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
             int i;
             float p;
             switch (values[0]) {
-                case COMM_PUT_ID_BUFFER:
+                case COMM_PUT_AREA_BUFFER:
                     if (values[1] == 1) {
                         if (infoDialog.progressBar != null) {
                             infoDialog.progressBar.setMax(values[3]);
@@ -545,7 +556,7 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
                     break;
                 case COMM_CHECK_NET:
                     infoDialog.progressBar.setMax(dataViewModel.detonatorDatas.size());
-                    infoDialog.progressBar.setMax(17);
+                    //infoDialog.progressBar.setMax(17);
                     infoDialog.progressBar.setProgress(0);
                     break;
                 case COMM_DETONATE_PROGRESS:
@@ -555,18 +566,38 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
                         int j = (values[2] >> 16) & 0x0ff;
                         int d = values[2] & 0x0ffff;
                         int s = values[4] & 0x0ffff;
+                        float f = j;
+
                         switch (i) {
                             case 0:
+                                break;
                             case 1:
-                                infoDialog.progressBar.setProgress(j);
+                                infoDialog.progressBar.setMax(100);
+                                infoDialog.progressBar.setProgress((float) (f * 40.0 / 16));
                                 break;
                             case 2:
+                                infoDialog.progressBar.setMax(100);
+                                infoDialog.progressBar.setProgress((float) (f * 20.0 / 16 + 40));
+                                break;
                             case 3:
+                                infoDialog.progressBar.setMax(100);
+                                infoDialog.progressBar.setProgress((float) (f * 10.0 / 16 + 60));
+                                break;
                             case 4:
-                                infoDialog.progressBar.setProgress(16);
+                                infoDialog.progressBar.setMax(100);
+                                infoDialog.progressBar.setProgress((float) (f * 10.0 / 16 + 70));
                                 break;
                             case 5:
-                                infoDialog.progressBar.setProgress(17);
+                                infoDialog.progressBar.setMax(100);
+                                infoDialog.progressBar.setProgress((float) (f * 10.0 / 16 + 80));
+                                break;
+                            case 6:
+                                infoDialog.progressBar.setMax(100);
+                                infoDialog.progressBar.setProgress((float) (f * 10.0 / 16 + 90));
+                                break;
+                            case 7:
+                                infoDialog.progressBar.setMax(100);
+                                infoDialog.progressBar.setProgress(100);
                                 newDetonator = d;
                                 breaking = true;
                                 break;
@@ -737,12 +768,14 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
 
             }
             commEnable = true;
+            enableButton(true);
         }
 
         @Override
         protected void onCancelled() {
             super.onCancelled();
             commEnable = true;
+            enableButton(true);
             Log.e("commTask", "close thread");
             serialPortUtils.sendStop = true;
         }
@@ -753,6 +786,7 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
             commEnable = true;
             Log.e("commTask", "close thread");
             serialPortUtils.sendStop = true;
+            enableButton(true);
         }
 
     }
@@ -850,5 +884,10 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
         }
     }
 
+    public void enableButton(boolean t) {
+        btDownload.setEnabled(t);
+        btStart.setEnabled(t);
+        btView.setEnabled(t);
+    }
 
 }

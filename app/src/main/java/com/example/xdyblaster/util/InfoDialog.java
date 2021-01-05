@@ -1,6 +1,7 @@
 package com.example.xdyblaster.util;
 
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.akexorcist.roundcornerprogressbar.RoundCornerProgressBar;
 import com.example.xdyblaster.R;
@@ -33,6 +35,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
 import io.realm.Realm;
+import utils.SerialPortUtils;
 
 
 public class InfoDialog extends DialogFragment {
@@ -50,6 +53,12 @@ public class InfoDialog extends DialogFragment {
     Button btConfirm;
     @BindView(R.id.lt_button)
     LinearLayout ltButton;
+    @BindView(R.id.tv_volt)
+    TextView tvVolt;
+    @BindView(R.id.tv_curr)
+    TextView tvCurr;
+    @BindView(R.id.layout_volt)
+    LinearLayout layoutVolt;
     private Unbinder unbinder;
     private OnButtonClickListener onButtonClickListener;
     private String title = "", message = "", edit1 = "";
@@ -61,6 +70,7 @@ public class InfoDialog extends DialogFragment {
     private boolean timerEnable = false;
     private boolean autoExit = true;
     private boolean chronometerCountDown = false;
+    private boolean voltEnable = false;
     @BindView(R.id.tv_edit1)
     TextView tvEdit1;
     @BindView(R.id.et_edit1)
@@ -81,6 +91,9 @@ public class InfoDialog extends DialogFragment {
     private int logoColor = 1;
     private int progressBarMax = 300, current;
     Realm mRealm = Realm.getDefaultInstance();
+    private DataViewModel dataViewModel;
+    private SerialPortUtils serialPortUtils;
+    private float curr = 0;
 
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_message, container);
@@ -88,6 +101,8 @@ public class InfoDialog extends DialogFragment {
         tvMessage.setText(message);
         tvTitle.setText(title);
         tvEdit1.setText(edit1);
+        serialPortUtils = SerialPortUtils.getInstance(getActivity());
+        dataViewModel = new ViewModelProvider(serialPortUtils.mActivity).get(DataViewModel.class);
 //        ivLogo.setImageTintList(ColorStateList.valueOf(0xff0000ff));
 //        ivLogo.setImageTintMode(PorterDuff.Mode.DST_OUT);
         if (logoColor == 0)
@@ -101,6 +116,11 @@ public class InfoDialog extends DialogFragment {
             tvMessage.setVisibility(View.VISIBLE);
         else
             tvMessage.setVisibility(View.GONE);
+
+        if (voltEnable)
+            layoutVolt.setVisibility(View.VISIBLE);
+        else
+            layoutVolt.setVisibility(View.GONE);
 
         if (btnEnable)
             ltButton.setVisibility(View.VISIBLE);
@@ -135,7 +155,27 @@ public class InfoDialog extends DialogFragment {
 
                     }
                 });
-            }
+            } else
+                chronometer.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener() {
+                    @SuppressLint("DefaultLocale")
+                    @Override
+                    public void onChronometerTick(Chronometer chronometer) {
+                        tvVolt.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getActivity()), R.color.green));
+                        if (dataViewModel.voltFloat != 0) {
+                            if (dataViewModel.voltFloat < 11)
+                                tvVolt.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getActivity()), R.color.red));
+                            if ((dataViewModel.voltFloat < 23) && (dataViewModel.voltFloat > 16))
+                                tvVolt.setTextColor(ContextCompat.getColor(Objects.requireNonNull(getActivity()), R.color.red));
+                        }
+                        tvVolt.setText(String.format("电压: %.1fv", dataViewModel.voltFloat));
+                        curr = (curr + dataViewModel.currFloat) / 2;
+                        if (curr > 50)
+                            tvCurr.setTextColor(ContextCompat.getColor(getActivity(), R.color.red));
+                        else
+                            tvCurr.setTextColor(ContextCompat.getColor(getActivity(), R.color.green));
+                        tvCurr.setText(String.format("电流: %.1fma", curr));
+                    }
+                });
             chronometer.start();
         } else {
             chronometer.setVisibility(View.GONE);
@@ -211,6 +251,7 @@ public class InfoDialog extends DialogFragment {
         unbinder.unbind();
     }
 
+    @SuppressLint("NonConstantResourceId")
     @OnClick({R.id.bt_cancel, R.id.bt_confirm, R.id.bt_exit})
     public void onViewClicked(View view) {
         if (onButtonClickListener != null) {
@@ -282,6 +323,10 @@ public class InfoDialog extends DialogFragment {
 
     public void setChronometerEnable(boolean b) {
         timerEnable = b;
+    }
+
+    public void setVoltEnable(boolean b) {
+        voltEnable = b;
     }
 
     public void setAutoExit(boolean b) {

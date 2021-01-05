@@ -77,6 +77,7 @@ public class AppConstants {
     public static final byte DEV_ALL_DISCHARGE = 40;
     public static final byte DEV_CALC_VOLTAGE = 41;
     public static final byte DEV_SET_TEST_DELAY = 42;
+    public static final byte DEV_PUT_AREA = 43;
     public static final byte DEV_POWER_9V = 100;
     public static final byte DEV_POWER_12V = 101;
     public static final byte DEV_POWER_24V = 102;

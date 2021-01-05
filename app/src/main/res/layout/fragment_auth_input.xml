@@ -27,8 +27,8 @@
                     android:layout_height="48dp"
                     android:layout_centerVertical="true"
                     android:layout_marginEnd="8dp"
-                    android:tint="@color/colorRed"
-                    app:srcCompat="@mipmap/ic_settings_white_48dp" />
+                    app:srcCompat="@mipmap/ic_settings_white_48dp"
+                    app:tint="@color/colorRed" />
 
                 <TextView
                     android:id="@+id/tvTitle"
@@ -70,7 +70,6 @@
                     android:layout_marginEnd="4dp"
                     android:layout_weight="1"
                     android:ems="20"
-                    android:inputType="number"
                     android:maxLength="13"
                     android:gravity="center"
                     android:textSize="22sp" />

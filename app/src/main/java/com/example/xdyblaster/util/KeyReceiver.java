@@ -56,15 +56,17 @@ public class KeyReceiver extends BroadcastReceiver {
                     break;
                 case 133:
                     i = 131;
+                    i=0;
                     break;
                 case 135:
                     i = 132;
+                    i=0;
                     break;
             }
         }
 
         message.what = i;
-//        if(System.currentTimeMillis()-keyTime<500) {
+        //        if(System.currentTimeMillis()-keyTime<500) {
 //            keyTime = System.currentTimeMillis();
 //            return;
 //        }
@@ -104,6 +106,7 @@ public class KeyReceiver extends BroadcastReceiver {
 //                mContext.sendBroadcast(intent);
 //            }
         }
+
         if (i == 133) {
             if ((keyF3 == 0) && b) {
                 message.arg1 = 1;

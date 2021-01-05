@@ -178,8 +178,8 @@ public class FragmentSetDelay extends DialogFragment {
                     showError("F2时差超范围!（0至60000毫秒）");
                     break;
                 }
-                if ((area > 16) || (area < 1)) {
-                    showError("区号超范围!（1至16）");
+                if ((area > 60) || (area < 1)) {
+                    showError("区号超范围!（1至60）");
                     break;
                 }
                 i = 0;

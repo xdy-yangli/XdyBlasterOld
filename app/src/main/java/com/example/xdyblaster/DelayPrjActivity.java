@@ -90,6 +90,7 @@ import static com.example.xdyblaster.util.CommDetonator.COMM_POWER_ON;
 import static com.example.xdyblaster.util.CommDetonator.COMM_READ_UID;
 import static com.example.xdyblaster.util.CommDetonator.COMM_RESET_DETONATOR;
 import static com.example.xdyblaster.util.CommDetonator.COMM_SCAN;
+import static com.example.xdyblaster.util.CommDetonator.COMM_STOP_OUTPUT;
 import static com.example.xdyblaster.util.CommDetonator.COMM_WAIT_PUBLISH;
 import static com.example.xdyblaster.util.CommDetonator.COMM_WRITE_AREA;
 import static com.example.xdyblaster.util.FileFunc.getSDPath;
@@ -140,6 +141,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
     private int vpNum;
     private boolean firstBoot, commEnable = true, battEnable = true;
     public boolean checkOnline;
+    public boolean powerOn = false;
     private SerialPortUtils serialPortUtils;
     @SuppressLint("HandlerLeak")
     Handler handler = new Handler() {
@@ -349,7 +351,8 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
 
 
         commTask = new CommTask(this);
-        commTask.execute(3, COMM_IDLE, COMM_GET_BATT, COMM_POWER_9V);
+        commTask.execute(3, COMM_IDLE, COMM_GET_BATT, COMM_STOP_OUTPUT);
+        powerOn = false;
 
         barcodeReceiver = new BarcodeReceiver(handler);
         IntentFilter filter = new IntentFilter();
@@ -517,7 +520,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
 
     @OnClick({R.id.btSetting, R.id.btEdit, R.id.btArea, R.id.btDetonator, R.id.tvID, R.id.tvTime, R.id.tvRow, R.id.tvHole})
     public void onViewClicked(View view) {
-        if (System.currentTimeMillis() < keyTime + 200)
+        if (System.currentTimeMillis() < keyTime + 1000)
             return;
         keyTime = System.currentTimeMillis();
         switch (view.getId()) {
@@ -708,6 +711,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
                                 if (dataViewModel.detonatorDatas.size() == 0) {
                                     infoDialog = new InfoDialog();
                                     infoDialog.setTitle("扫描网络");
+                                    infoDialog.setVoltEnable(true);
                                     infoDialog.setLogoColor(0);
                                     infoDialog.setProgressEnable(true);
                                     infoDialog.setMessage(String.format("发现%d发雷管", 0));
@@ -721,7 +725,8 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
                                             commTask.running = false;
                                             commTask.cancel(true);
                                             commTask = new CommTask(DelayPrjActivity.this);
-                                            commTask.execute(1, COMM_IDLE);
+                                            commTask.execute(1, COMM_IDLE, COMM_STOP_OUTPUT);
+                                            powerOn = false;
                                             battEnable = true;
                                         }
                                     });
@@ -732,7 +737,8 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
                                     commTask = new CommTask(DelayPrjActivity.this);
                                     commTask.execute(10, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_RESET_DETONATOR,
                                             COMM_BLIND_SCAN, COMM_BLIND_SCAN_PROGRESS, COMM_IDLE,
-                                            COMM_GET_UUID_BUFFER, COMM_IDLE, COMM_POWER_9V);
+                                            COMM_GET_UUID_BUFFER, COMM_IDLE, COMM_STOP_OUTPUT);
+                                    powerOn = false;
                                 } else {
                                     infoDialog = new InfoDialog();
                                     infoDialog.setTitle("提示");
@@ -933,15 +939,44 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
         if (n != 4)
             findDetonatorValues(n);
         if (f1f2Mode == 0) {
-            battEnable = false;
-            checkOnline = false;
-            commTask.running = false;
-            commTask.cancel(true);
-            commTask = new CommTask(DelayPrjActivity.this);
-            commTask.setDetonatorValues(detonatorArea, detonatorHole, detonatorDelay, detonatorTime);
-            commTask.waitPublish = true;
-            commTask.execute(4, COMM_IDLE, COMM_SCAN, COMM_READ_UID, COMM_WAIT_PUBLISH, COMM_WRITE_AREA, COMM_CHECK_ONLINE);
-            tvStatus.setText("请接入雷管");
+            if (powerOn) {
+                battEnable = false;
+                checkOnline = false;
+                commTask.running = false;
+                commTask.cancel(true);
+                commTask = new CommTask(DelayPrjActivity.this);
+                commTask.setDetonatorValues(detonatorArea, detonatorHole, detonatorDelay, detonatorTime);
+                commTask.waitPublish = true;
+                commTask.execute(4, COMM_IDLE, COMM_SCAN, COMM_READ_UID, COMM_WAIT_PUBLISH, COMM_WRITE_AREA, COMM_CHECK_ONLINE);
+                tvStatus.setText("请接入雷管");
+            } else {
+                InfoDialog powerDialog;
+                powerDialog = new InfoDialog();
+                powerDialog.setLogoColor(0);
+                powerDialog.setTitle("单发注册");
+                powerDialog.setProgressEnable(false);
+                powerDialog.setMessage(String.format("是否打开电源单发注册？", 0));
+                powerDialog.setCancelable(false);
+                powerDialog.setBtnEnable(true);
+                powerDialog.setOnButtonClickListener(new InfoDialog.OnButtonClickListener() {
+                    @Override
+                    public void onButtonClick(int index, String str) {
+                        if (index == 1) {
+                            battEnable = false;
+                            checkOnline = false;
+                            commTask.running = false;
+                            commTask.cancel(true);
+                            commTask = new CommTask(DelayPrjActivity.this);
+                            commTask.setDetonatorValues(detonatorArea, detonatorHole, detonatorDelay, detonatorTime);
+                            commTask.waitPublish = true;
+                            commTask.execute(4, COMM_IDLE, COMM_POWER_9V, COMM_DELAY, COMM_SCAN, COMM_READ_UID, COMM_WAIT_PUBLISH, COMM_WRITE_AREA, COMM_CHECK_ONLINE);
+                            powerOn = true;
+                            tvStatus.setText("请接入雷管");
+                        }
+                    }
+                });
+                powerDialog.show(getSupportFragmentManager(), "info");
+            }
         } else {
             if (!threadF1Run)
                 scanUtil.scan();
@@ -1272,9 +1307,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
             }
             Intent intent = new Intent("same.uuid");
             sendBroadcast(intent);
-        }
-        else
-        {
+        } else {
             try {
                 mMediaPlayer.start();
             } catch (Exception e) {
@@ -1377,22 +1410,35 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
                     break;
                 case COMM_BLIND_SCAN_PROGRESS:
                     try {
-                        infoDialog.progressBar.setMax(17);
+                        infoDialog.progressBar.setMax(100);
                         int i = (values[2] >> 24) & 0x0ff;
                         int j = (values[2] >> 16) & 0x0ff;
                         int d = values[2] & 0x0ffff;
+                        float f = j;
                         switch (i) {
                             case 0:
+
+                                break;
                             case 1:
-                                infoDialog.progressBar.setProgress(j);
+                                infoDialog.progressBar.setProgress((float) (f * 40.0 / 16));
                                 break;
                             case 2:
+                                infoDialog.progressBar.setProgress((float) (f * 20.0 / 16 + 40));
+                                break;
                             case 3:
+                                infoDialog.progressBar.setProgress((float) (f * 10.0 / 16 + 60));
+                                break;
                             case 4:
-                                infoDialog.progressBar.setProgress(16);
+                                infoDialog.progressBar.setProgress((float) (f * 10.0 / 16 + 70));
                                 break;
                             case 5:
-                                infoDialog.progressBar.setProgress(17);
+                                infoDialog.progressBar.setProgress((float) (f * 10.0 / 16 + 80));
+                                break;
+                            case 6:
+                                infoDialog.progressBar.setProgress((float) (f * 10.0 / 16 + 90));
+                                break;
+                            case 7:
+                                infoDialog.progressBar.setProgress(100);
                                 setTotalCount(d, 0);
                                 if (d == 0) {
                                     //running = false;
@@ -1404,7 +1450,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
                                 breaking = true;
                                 break;
                         }
-                        infoDialog.setMessageTxt(String.format("发现%d发雷管", d));
+                        infoDialog.setMessageTxt(String.format("发现%d发雷管(%d/7)", d,i));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -1505,7 +1551,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
         @Override
         protected void onPostExecute(Integer integer) {
 //            super.onPostExecute(integer);
-            Log.e("commTask", "exit thread " + String.valueOf(cmdType));
+//            Log.e("commTask", "exit thread " + String.valueOf(cmdType));
             switch (integer) {
                 case 0:
                 case -1:
@@ -1660,7 +1706,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
                 String reason = intent.getStringExtra(SYSTEM_DIALOG_REASON_KEY);
                 if (reason != null && reason.equals(SYSTEM_DIALOG_REASON_HOME_KEY)) {
                     System.out.println("home键监听");
-                    saveDataChange();
+//                    saveDataChange();
                 }
             }
         }
@@ -1671,7 +1717,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
         public void onReceive(final Context context, final Intent intent) {
             final String action = intent.getAction();
             if (Intent.ACTION_SCREEN_OFF.equals(action)) {
-                saveDataChange();
+                //         saveDataChange();
                 System.out.println("电源键监听");
             }
         }

@@ -91,7 +91,10 @@ public class SettingActivity extends AppCompatActivity implements CustomAdapt {
             mUpdateUrl = "http://gzyte.com.cn/download/update_test.json";
         else
             mUpdateUrl = "http://gzyte.com.cn/download/test/update_test.json";
-
+        if (UpdateUtils.getVersionCode(this) < 100) {
+            dataViewModel.systemCount = 10;
+            layoutSystem.setVisibility(View.VISIBLE);
+        }
 
         //  UpdateAppUtils.init(this);
 

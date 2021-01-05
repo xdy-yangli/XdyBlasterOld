@@ -165,6 +165,28 @@
 
         <LinearLayout
             android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/tvStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="22sp"
+                android:singleLine="false"
+                android:background="@null"
+                android:ems="10"
+                android:gravity="top|start"
+                android:includeFontPadding="false"
+                android:inputType="textMultiLine"
+                android:scrollbars="vertical"
+                android:windowSoftInputMode="stateAlwaysHidden"
+                android:text="" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 

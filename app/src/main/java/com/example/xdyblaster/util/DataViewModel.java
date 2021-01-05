@@ -27,7 +27,7 @@ public class DataViewModel extends AndroidViewModel {
     public boolean fileLoaded, fileReload = false;
     public int battStatus;
     public float[] vData = new float[4];
-    public int ver;
+    public int ver, countOK;
     // public LatLng latLng;
 
     public MutableLiveData<Integer> volt = new MutableLiveData<>();
@@ -49,7 +49,7 @@ public class DataViewModel extends AndroidViewModel {
     public int[] timerBuffer = new int[2048];
     public int[] areaBuffer = new int[2048];
     public int[] statusBuffer = new int[2048];
-    public byte[] uuidBuffer = new byte[1024 * 16];
+    public byte[] uuidBuffer = new byte[2048 * 16];
 
     public String devId, userId = "123456789012345678";
     public String devVer;
@@ -59,7 +59,8 @@ public class DataViewModel extends AndroidViewModel {
     public int systemCount = 0;
     public int battPercent;
     public boolean top = false;
-
+    //public boolean reset=false;
+    public float currFloat, voltFloat;
 
     public String getFileName() {
         return fileName;
@@ -73,8 +74,14 @@ public class DataViewModel extends AndroidViewModel {
     public void InitData(String fileName) {
 
         updateList = new ArrayList<>();
-        if (!fileLoaded)
-            FileFunc.loadDetonatorSetting(fileName, detonatorSetting);
+        currFloat = 0;
+        voltFloat = 0;
+
+        if (!fileLoaded) {
+            if (!FileFunc.loadDetonatorSetting(fileName, detonatorSetting))
+                FileFunc.saveDetonatorFile(fileName, detonatorSetting, detonatorDatas);
+        }
+
         int count = detonatorSetting.getRow();
         if (count == 0)
             count = 1;

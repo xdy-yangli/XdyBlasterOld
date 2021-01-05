@@ -255,17 +255,22 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
                 dwdm = etDwdm.getText().toString();
                 dataViewModel.userId = etPeople.getText().toString();
                 if (!cbTester.isChecked()) {
-                    if (htid.isEmpty() && xmbh.isEmpty()) {
-                        showError("请输入合同ID或项目编号");
-                        break;
-                    }
+//                    if (htid.isEmpty() && xmbh.isEmpty()) {
+//                        showError("请输入合同ID或项目编号");
+//                        break;
+//                    }
                     if (dataViewModel.userId.isEmpty()) {
                         showError("请输爆破人员身份证");
                         break;
                     }
-
-                    SharedPreferencesUtils.setParam(this, "htid", htid);
-                    SharedPreferencesUtils.setParam(this, "xmbh", xmbh);
+                    if (!htid.isEmpty())
+                        SharedPreferencesUtils.setParam(this, "htid", htid);
+                    else
+                        SharedPreferencesUtils.setParam(this, "htid", "");
+                    if (!xmbh.isEmpty())
+                        SharedPreferencesUtils.setParam(this, "xmbh", xmbh);
+                    else
+                        SharedPreferencesUtils.setParam(this, "xmbh", "");
                     SharedPreferencesUtils.setParam(this, "bprysfz", dataViewModel.userId);
                 }
                 if (dwdm.isEmpty()) {
@@ -278,25 +283,28 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
                 try {
                     StringBuilder stringBuilder = new StringBuilder();
                     String str;
-
-
-                    if (!cbTester.isChecked()) {
-                        if (!htid.isEmpty())
-                            httpParams.put("htid", htid);
-                        if (!xmbh.isEmpty())
-                            httpParams.put("xmbh", xmbh);
-                        httpParams.put("wd", etWd.getText().toString());
-                        httpParams.put("jd", etJd.getText().toString());
-
-                    } else {
+                    //                  if (!cbTester.isChecked()) {
+                    if (!htid.isEmpty())
+                        httpParams.put("htid", htid);
+                    if (!xmbh.isEmpty())
+                        httpParams.put("xmbh", xmbh);
+                    httpParams.put("wd", etWd.getText().toString());
+                    httpParams.put("jd", etJd.getText().toString());
+                    if (htid.isEmpty() && xmbh.isEmpty())
                         htid = "厂内试爆" + FileFunc.getDate();
-//                        httpParams.put("wd", String.format("%f", serialPortUtils.lat));
-//                        httpParams.put("jd", String.format("%f", serialPortUtils.lng));
-                        httpParams.put("jd", "106.59774");
-                        httpParams.put("wd", "23.90510");
-                    }
+//                            htid = FileFunc.getDate();
+
+
+//                    } else {
+//                        htid = "厂内试爆" + FileFunc.getDate();
+////                        httpParams.put("wd", String.format("%f", serialPortUtils.lat));
+////                        httpParams.put("jd", String.format("%f", serialPortUtils.lng));
+//                        httpParams.put("jd", "106.59774");
+//                        httpParams.put("wd", "23.90510");
+//                }
                     httpParams.put("dwdm", dwdm);
                     httpParams.put("sbbh", dataViewModel.devId);
+                    //httpParams.put("sbbh", "F53AC008018");
 
 //                    httpParams.put("jd", "106.59774");//String.format("%f", mCurrentLat));
 //                    httpParams.put("wd","23.90510"); //String.format("%f", mCurrentLon));

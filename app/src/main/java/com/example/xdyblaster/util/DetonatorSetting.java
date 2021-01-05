@@ -2,7 +2,7 @@ package com.example.xdyblaster.util;
 
 public class DetonatorSetting {
     int row = 1;
-    int hole;
+    int hole=1000;
     int cnt;
     int rowDelay;
     int holeDelay;
