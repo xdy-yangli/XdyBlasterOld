@@ -5,7 +5,9 @@ import com.google.gson.Gson;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.LinkedHashMap;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -76,7 +78,12 @@ public class HttpUtil {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        OkHttpClient okHttpClient = new OkHttpClient();
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .connectTimeout(20, TimeUnit.SECONDS)
+                .writeTimeout(20, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build();
+
         String send = head + jsonImgList;
         RequestBody requestBody = RequestBody.create(send, MediaType.parse("application/x-www-form-urlencoded"));
         Request request = new Request.Builder()

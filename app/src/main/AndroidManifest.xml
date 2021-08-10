@@ -9,8 +9,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.CAMERA" />
-<!--     <uses-permission android:name="android.permission.WAKE_LOCK" />-->
+    <uses-permission android:name="android.permission.CAMERA" /> <!-- <uses-permission android:name="android.permission.WAKE_LOCK" /> -->
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -41,7 +40,10 @@
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".system.SelfTestActivity"></activity>
+        <activity android:name=".system.ClkActivity"/>
+        <activity android:name=".system.BridgeActivity" />
+        <activity android:name=".FaceActivity" />
+        <activity android:name=".system.SelfTestActivity" />
         <activity android:name=".StartActivity" />
 
         <provider
@@ -56,7 +58,6 @@
 
         <activity android:name=".system.DelayActivity" /> <!-- <activity android:name=".FaceRegisterActivity" /> -->
         <activity android:name=".DownloadAuthActivity" />
-        <activity android:name=".system.DailyActivity" />
         <activity android:name=".ResultDataActivity" />
         <activity android:name=".system.VerActivity" />
         <activity android:name=".UploadResultActivity" />

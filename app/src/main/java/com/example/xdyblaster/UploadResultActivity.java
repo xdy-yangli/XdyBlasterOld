@@ -184,7 +184,7 @@ public class UploadResultActivity extends AppCompatActivity implements CustomAda
         }
     }
 
-    public  void saveReultIndex() {
+    public void saveReultIndex() {
         byte[] b;
         File file = new File(getSDPath() + "//xdyBlaster//result//index.jason");
         JSONObject jsonObject;
@@ -334,7 +334,7 @@ public class UploadResultActivity extends AppCompatActivity implements CustomAda
         }
     }
 
-        @SuppressLint("StaticFieldLeak")
+    @SuppressLint("StaticFieldLeak")
     public class TcpWrite extends AsyncTask<Integer, Object, Integer> {
         public boolean finish;
 
@@ -367,7 +367,7 @@ public class UploadResultActivity extends AppCompatActivity implements CustomAda
                     publishProgress(1, percent);
                 }
             };
-            Thread thread=new Thread(new Runnable() {
+            Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     minaClient.start(list, dataViewModel);
@@ -379,6 +379,7 @@ public class UploadResultActivity extends AppCompatActivity implements CustomAda
                     Thread.sleep(100);
                 } catch (Exception e) {
                     e.printStackTrace();
+                    return null;
                 }
             }
             return null;

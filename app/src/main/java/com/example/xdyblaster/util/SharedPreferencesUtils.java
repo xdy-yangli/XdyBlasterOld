@@ -40,29 +40,23 @@ public class SharedPreferencesUtils {
         SharedPreferences.Editor editor = sp.edit();
 
 
-        if ("String".equals(type)) {
-
-            editor.putString(key, (String) object);
-
-        } else if ("Integer".equals(type)) {
-
-            editor.putInt(key, (Integer) object);
-
-        } else if ("Boolean".equals(type)) {
-
-            editor.putBoolean(key, (Boolean) object);
-
-        } else if ("Float".equals(type)) {
-
-            editor.putFloat(key, (Float) object);
-
-        } else if ("Long".equals(type)) {
-
-            editor.putLong(key, (Long) object);
-
+        switch (type) {
+            case "String":
+                editor.putString(key, (String) object);
+                break;
+            case "Integer":
+                editor.putInt(key, (Integer) object);
+                break;
+            case "Boolean":
+                editor.putBoolean(key, (Boolean) object);
+                break;
+            case "Float":
+                editor.putFloat(key, (Float) object);
+                break;
+            case "Long":
+                editor.putLong(key, (Long) object);
+                break;
         }
-
-
         editor.commit();
 
     }
@@ -84,29 +78,18 @@ public class SharedPreferencesUtils {
         SharedPreferences sp = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
 
 
-        if ("String".equals(type)) {
-
-            return sp.getString(key, (String) defaultObject);
-
-        } else if ("Integer".equals(type)) {
-
-            return sp.getInt(key, (Integer) defaultObject);
-
-        } else if ("Boolean".equals(type)) {
-
-            return sp.getBoolean(key, (Boolean) defaultObject);
-
-        } else if ("Float".equals(type)) {
-
-            return sp.getFloat(key, (Float) defaultObject);
-
-        } else if ("Long".equals(type)) {
-
-            return sp.getLong(key, (Long) defaultObject);
-
+        switch (type) {
+            case "String":
+                return sp.getString(key, (String) defaultObject);
+            case "Integer":
+                return sp.getInt(key, (Integer) defaultObject);
+            case "Boolean":
+                return sp.getBoolean(key, (Boolean) defaultObject);
+            case "Float":
+                return sp.getFloat(key, (Float) defaultObject);
+            case "Long":
+                return sp.getLong(key, (Long) defaultObject);
         }
-
-
         return null;
 
     }

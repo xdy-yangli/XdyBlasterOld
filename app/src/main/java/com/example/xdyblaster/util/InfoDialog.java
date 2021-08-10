@@ -34,7 +34,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import io.realm.Realm;
+//import io.realm.Realm;
 import utils.SerialPortUtils;
 
 
@@ -90,10 +90,11 @@ public class InfoDialog extends DialogFragment {
     private String etEdit1Str = "";
     private int logoColor = 1;
     private int progressBarMax = 300, current;
-    Realm mRealm = Realm.getDefaultInstance();
+    //Realm mRealm = Realm.getDefaultInstance();
     private DataViewModel dataViewModel;
     private SerialPortUtils serialPortUtils;
     private float curr = 0;
+    private boolean messageSingle = true;
 
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.layout_message, container);
@@ -106,16 +107,18 @@ public class InfoDialog extends DialogFragment {
 //        ivLogo.setImageTintList(ColorStateList.valueOf(0xff0000ff));
 //        ivLogo.setImageTintMode(PorterDuff.Mode.DST_OUT);
         if (logoColor == 0)
-            ivLogo.setColorFilter(ContextCompat.getColor(Objects.requireNonNull(getActivity()).getApplicationContext(), R.color.blue));
+            ivLogo.setColorFilter(ContextCompat.getColor(requireActivity().getApplicationContext(), R.color.blue));
         if (logoColor == 1)
-            ivLogo.setColorFilter(ContextCompat.getColor(Objects.requireNonNull(getActivity()).getApplicationContext(), R.color.red));
+            ivLogo.setColorFilter(ContextCompat.getColor(requireActivity().getApplicationContext(), R.color.red));
         if (logoColor == 2)
-            ivLogo.setColorFilter(ContextCompat.getColor(Objects.requireNonNull(getActivity()).getApplicationContext(), R.color.green));
+            ivLogo.setColorFilter(ContextCompat.getColor(requireActivity().getApplicationContext(), R.color.green));
 
         if (messageEnable)
             tvMessage.setVisibility(View.VISIBLE);
         else
             tvMessage.setVisibility(View.GONE);
+        tvMessage.setSingleLine(messageSingle);
+
 
         if (voltEnable)
             layoutVolt.setVisibility(View.VISIBLE);
@@ -183,10 +186,15 @@ public class InfoDialog extends DialogFragment {
         progressBar.post(new Runnable() {
             @Override
             public void run() {
-                progressBar.setProgress(0.0f);
-                progressBar.setSecondaryProgress(0.0f);
-                progressBar.setMax(progressBarMax);
+                try {
+                    progressBar.setProgress(0.0f);
+                    progressBar.setSecondaryProgress(0.0f);
+                    progressBar.setMax(progressBarMax);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
+
         });
 
 //        if (!mRealm.isInTransaction()) {
@@ -210,6 +218,7 @@ public class InfoDialog extends DialogFragment {
 //        {
 //            e.printStackTrace();
 //        }
+
         return view;
     }
 
@@ -344,4 +353,9 @@ public class InfoDialog extends DialogFragment {
     public void setChronometerCountDown(boolean coutDown) {
         chronometerCountDown = coutDown;
     }
+
+    public void setMessageSingleLine(boolean b) {
+        messageSingle = b;
+    }
+
 }

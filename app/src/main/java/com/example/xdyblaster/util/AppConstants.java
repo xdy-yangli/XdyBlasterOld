@@ -24,9 +24,10 @@ import static android.view.KeyEvent.KEYCODE_PAGE_UP;
 public class AppConstants {
     public static final String ACTION_SCAN_INIT = "com.rfid.SCAN_INIT";
     public static final String ACTION_CLOSE_SCAN = "com.rfid.CLOSE_SCAN";
+    public static final String ID_FACTORY="F53AC666888";
+    public static final String ID_EXIT_FACTORY="F53AC888666";
 
-
-    public static int BLASTER_TIMER_DELAY = 1800;
+    public static int BLASTER_TIMER_DELAY = 2100;
     public static final int TCP_NULL = 1;
     public static final int TCP_CONNECT_SUCCESS = 2;
     public static final int TCP_CONNECT_FAIL = 3;
@@ -78,6 +79,7 @@ public class AppConstants {
     public static final byte DEV_CALC_VOLTAGE = 41;
     public static final byte DEV_SET_TEST_DELAY = 42;
     public static final byte DEV_PUT_AREA = 43;
+    public static final byte DEV_SET_CLK = 44;
     public static final byte DEV_POWER_9V = 100;
     public static final byte DEV_POWER_12V = 101;
     public static final byte DEV_POWER_24V = 102;

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+
     tools:context=".AuthorizeActivity">
 
     <LinearLayout
@@ -35,6 +36,7 @@
             android:layout_width="match_parent"
             android:layout_height="120dp"
             android:background="@drawable/custom_btn"
+            android:onClick="onClick"
             android:clickable="true"
             android:focusable="true"
             android:orientation="horizontal"
@@ -75,6 +77,7 @@
             android:id="@+id/layout_list_auth"
             android:layout_width="match_parent"
             android:layout_height="120dp"
+            android:onClick="onClick"
             android:background="@drawable/custom_btn"
             android:clickable="true"
             android:focusable="true"
@@ -119,6 +122,7 @@
             android:layout_width="match_parent"
             android:layout_height="120dp"
             android:background="@drawable/custom_btn"
+            android:onClick="onClick"
             android:clickable="true"
             android:focusable="true"
             android:orientation="horizontal"
@@ -130,9 +134,8 @@
                 android:layout_height="48dp"
                 android:layout_gravity="center_vertical"
                 android:layout_marginStart="32dp"
-                android:tint="@color/main3"
-
-                app:srcCompat="@mipmap/ic_cloud_upload_white_48dp" />
+                app:srcCompat="@mipmap/ic_cloud_upload_white_48dp"
+                app:tint="@color/main3" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -154,6 +157,42 @@
             android:layout_width="match_parent"
             android:layout_height="1px"
             android:background="@color/colorBlack2" />
+
+        <FrameLayout
+            android:id="@+id/layout_face"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:background="@drawable/custom_btn"
+            android:clickable="true"
+            android:focusable="true"
+            android:orientation="horizontal"
+            android:paddingTop="24dp"
+            android:paddingBottom="24dp">
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="32dp"
+                app:srcCompat="@mipmap/face_recognition"
+                app:tint="@color/main3" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:shadowColor="#20000000"
+                android:shadowDx="2"
+                android:shadowDy="2"
+                android:shadowRadius="1"
+                android:text="4.人脸识别"
+                android:textColor="@color/colorPrimary"
+                android:textSize="28sp" />
+
+
+        </FrameLayout>
 
 
     </LinearLayout>

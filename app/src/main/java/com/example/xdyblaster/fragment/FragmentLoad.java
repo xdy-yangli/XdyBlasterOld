@@ -98,6 +98,7 @@ public class FragmentLoad extends DialogFragment {
                 @Override
                 public void run() {
                     FileFunc.saveDetonatorFile(dataViewModel.fileName, dataViewModel.detonatorSetting, dataViewModel.detonatorDatas);
+                    dataViewModel.dataShift=true;
                     if (onExitListener != null)
                         onExitListener.OnExit();
                     dismissAllowingStateLoss();

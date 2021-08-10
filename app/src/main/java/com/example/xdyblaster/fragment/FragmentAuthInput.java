@@ -1,9 +1,18 @@
 package com.example.xdyblaster.fragment;
 
+import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.res.AssetFileDescriptor;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Message;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -19,18 +28,30 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.example.xdyblaster.DelayPrjActivity;
 import com.example.xdyblaster.R;
-import com.example.xdyblaster.util.AllCapTransformationMethod;
 import com.example.xdyblaster.util.DataViewModel;
 import com.example.xdyblaster.util.FileFunc;
 import com.example.xdyblaster.util.InfoDialog;
+import com.example.xdyblaster.util.SharedPreferencesUtils;
+
+import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import cn.pda.scan.BarcodeReceiver;
+import cn.pda.scan.ScanUtil;
 import utils.SerialPortUtils;
+
+import static com.example.xdyblaster.MainActivity.actionKeyF3Push;
+import static com.example.xdyblaster.MainActivity.actionKeyF3Release;
+import static com.example.xdyblaster.util.AppConstants.ACTION_SCAN_INIT;
+
+//import com.example.xdyblaster.util.AllCapTransformationMethod;
 
 public class FragmentAuthInput extends DialogFragment {
 
@@ -45,12 +66,56 @@ public class FragmentAuthInput extends DialogFragment {
     EditText etCount;
     @BindView(R.id.etEach)
     EditText etEach;
+    @BindView(R.id.btScan)
+    Button btScan;
 
     private SerialPortUtils serialPortUtils;
     private DataViewModel dataViewModel;
     public OnButtonClickListener onButtonClickListener = null;
     String uuid;
     int count, each;
+    LocalBroadcastManager broadcastManager;
+    ScanUtil scanUtil;
+    MediaPlayer mMediaPlayer = new MediaPlayer();
+    MediaPlayer mMediaPlayer2 = new MediaPlayer();
+
+
+    public BroadcastReceiver scanReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            byte[] data = intent.getByteArrayExtra("data");
+            if (data != null) {
+//                String barcode = Tools.Bytes2HexString(data, data.length);
+                String barcode = new String(data);
+                if (etUuid != null) {
+                    if (barcode.length() >= 18) {
+                        if (barcode.substring(0, 3).equals("I53")) {
+                            String stringBuilder = "53" +
+                                    barcode.substring(9,18) +
+                                    "00";
+                            etUuid.setText(stringBuilder);
+                        }
+                    } else
+                        etUuid.setText(barcode);
+                    try {
+                        mMediaPlayer.start();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
+            }
+        }
+    };
+
+    public BroadcastReceiver keyF3Push = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            scanUtil.scan();
+        }
+    };
 
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_auth_input, container);
@@ -60,10 +125,49 @@ public class FragmentAuthInput extends DialogFragment {
         Bundle bundle = getArguments();
         assert bundle != null;
         uuid = bundle.getString("uuid");
-        etUuid.setTransformationMethod(new AllCapTransformationMethod());
+        //etUuid.setTransformationMethod(new AllCapTransformationMethod());
+        etUuid.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                //下面这种方法才是真正的将输入的小写字母转换为大写字母
+                etUuid.removeTextChangedListener(this);
+                etUuid.setText(s.toString().toUpperCase());
+                //在输入完毕后定位到光标的末尾
+                //mEdtCarNo.setSelection(s.length());
+                /**在输入完毕后定位到当前修改的末尾 = start + count*/
+                etUuid.setSelection(start + count);
+                etUuid.addTextChangedListener(this);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+        each = (int) SharedPreferencesUtils.getParam(getActivity(), "each", 1);
+        count = (int) SharedPreferencesUtils.getParam(getActivity(), "box", 1);
+
         etUuid.setText(uuid);
+        etCount.setText(String.valueOf(count));
+        etEach.setText(String.valueOf(each));
+
+//        IntentFilter filter = new IntentFilter();
+//        filter.addAction("com.rfid.SCAN");
+//        broadcastManager = LocalBroadcastManager.getInstance(getActivity());
+//        broadcastManager.registerReceiver(scanReceiver, filter);
+//        Intent intent = new Intent();
+//        intent.setAction(ACTION_SCAN_INIT);
+//        broadcastManager.sendBroadcast(intent);
+
+
         return view;
     }
+
 
     @Override
     public void onStart() {
@@ -94,20 +198,64 @@ public class FragmentAuthInput extends DialogFragment {
 
         params.alpha = 1.0f;//0.7f;f
         win.setAttributes(params);
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("com.rfid.SCAN");
+        getActivity().registerReceiver(scanReceiver, filter);
+
+        filter = new IntentFilter();
+        filter.addAction(actionKeyF3Push);
+        getActivity().registerReceiver(keyF3Push, filter);
+
+        Intent intent = new Intent();
+        intent.setAction(ACTION_SCAN_INIT);
+        getActivity().sendBroadcast(intent);
+        scanUtil = new ScanUtil(requireActivity());
+        //we must set mode to 0 : BroadcastReceiver mode
+        scanUtil.setTimeout("2000");
+        scanUtil.setScanMode(0);
+        try {
+            AssetFileDescriptor fd = getActivity().getAssets().openFd("9414.wav");
+            mMediaPlayer.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
+            mMediaPlayer.prepare();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            AssetFileDescriptor fd = getActivity().getAssets().openFd("702.wav");
+            mMediaPlayer2.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
+            mMediaPlayer2.prepare();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+//        broadcastManager = LocalBroadcastManager.getInstance(getActivity());
+//        broadcastManager.registerReceiver(scanReceiver, filter);
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        scanUtil.stopScan();
+        scanUtil.setScanMode(1);
+        requireActivity().unregisterReceiver(scanReceiver);
+        requireActivity().unregisterReceiver(keyF3Push);
+        //broadcastManager.unregisterReceiver(scanReceiver);
+        mMediaPlayer.release();
+        mMediaPlayer2.release();
         unbinder.unbind();
     }
 
 
-    @OnClick({R.id.btExit, R.id.btConfirm})
+    @SuppressLint("NonConstantResourceId")
+    @OnClick({R.id.btExit, R.id.btConfirm, R.id.btScan})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.btExit:
                 dismissAllowingStateLoss();
+                break;
+            case R.id.btScan:
+                scanUtil.scan();
                 break;
             case R.id.btConfirm:
                 if (etUuid.getText().toString().length() != 13) {
@@ -128,6 +276,8 @@ public class FragmentAuthInput extends DialogFragment {
                     each = 1;
                 } else
                     each = Integer.parseInt(etEach.getText().toString());
+                SharedPreferencesUtils.setParam(requireActivity(), "box", count);
+                SharedPreferencesUtils.setParam(requireActivity(), "each", each);
 
                 InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                 //隐藏软键盘 //
@@ -152,6 +302,7 @@ public class FragmentAuthInput extends DialogFragment {
         infoDialog.setMessage(str);
         infoDialog.show(getParentFragmentManager(), "info");
     }
+
 
     public interface OnButtonClickListener {
         void onButtonClick(int index, String uuid, int count, int each);

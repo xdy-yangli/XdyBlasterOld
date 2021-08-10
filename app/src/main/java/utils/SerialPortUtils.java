@@ -85,9 +85,9 @@ public class SerialPortUtils {
     public LocationManager locationManager;
     public Location latLng = null;
     public boolean newLatlng = false;
-    public double lng, lat;
+    public double lng=0, lat=0;
 
-    private LocationListener locationListener = new LocationListener() {
+    private final LocationListener locationListener = new LocationListener() {
         /**
          * 位置信息变化时触发:当坐标改变时触发此函数，如果Provider传进相同的坐标，它就不会被触发
          * @param location
@@ -98,8 +98,8 @@ public class SerialPortUtils {
             latLng = location;
             double r = FileFunc.Distance(lat, lng, latLng.getLatitude(), latLng.getLongitude());
             if (r > 100) {
-                SharedPreferencesUtils.setParam(mContext, "lat", String.format("%.6f",latLng.getLatitude()));
-                SharedPreferencesUtils.setParam(mContext, "lng", String.format("%.6f",latLng.getLongitude()));
+                SharedPreferencesUtils.setParam(mContext, "lat", String.format("%.6f", latLng.getLatitude()));
+                SharedPreferencesUtils.setParam(mContext, "lng", String.format("%.6f", latLng.getLongitude()));
             }
             lat = latLng.getLatitude();
             lng = latLng.getLongitude();
@@ -144,22 +144,17 @@ public class SerialPortUtils {
         }
     };
 
-    public void ResetBlaster()
-    {
+    public void ResetBlaster() {
         serialPort.setGPIOlow(ioPort);
         try {
             Thread.sleep(500);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         serialPort.setGPIOhigh(ioPort);
         try {
             Thread.sleep(500);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -361,29 +356,29 @@ public class SerialPortUtils {
 
     public void DelayMs(int ms) {
         long end;
-        end = System.currentTimeMillis() + ms;
-        while (true) {
-            try {
+        try {
+            end = System.currentTimeMillis() + ms;
+            while (true) {
                 Thread.sleep(1);
-            } catch (Exception e) {
-                Log.e(TAG, "run: 异常：" + e.toString());
+                if (end < System.currentTimeMillis())
+                    return;
             }
-            if (end < System.currentTimeMillis())
-                return;
+        } catch (Exception e) {
+            Log.e(TAG, "run: 异常：" + e.toString());
         }
     }
 
     public void DelayMsThread(int ms) {
         long end;
-        end = System.currentTimeMillis() + ms;
-        while (!sendStop) {
-            try {
+        try {
+            end = System.currentTimeMillis() + ms;
+            while (!sendStop) {
                 Thread.sleep(1);
-            } catch (Exception e) {
-                Log.e(TAG, "run: 异常：" + e.toString());
+                if (end < System.currentTimeMillis())
+                    return;
             }
-            if (end < System.currentTimeMillis())
-                return;
+        } catch (Exception e) {
+            Log.e(TAG, "run: 异常：" + e.toString());
         }
     }
 

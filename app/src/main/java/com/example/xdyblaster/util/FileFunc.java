@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -45,7 +46,7 @@ public class FileFunc {
     public static String stringToJSON(String strJson) {
         // 计数tab的个数
         int tabNum = 0;
-        StringBuffer jsonFormat = new StringBuffer();
+        StringBuilder jsonFormat = new StringBuilder();
         int length = strJson.length();
 
         char last = 0;
@@ -53,7 +54,7 @@ public class FileFunc {
             char c = strJson.charAt(i);
             if (c == '{') {
                 tabNum++;
-                jsonFormat.append(c + "\n");
+                jsonFormat.append(c).append("\n");
                 jsonFormat.append(getSpaceOrTab(tabNum));
             } else if (c == '}') {
                 tabNum--;
@@ -61,17 +62,17 @@ public class FileFunc {
                 jsonFormat.append(getSpaceOrTab(tabNum));
                 jsonFormat.append(c);
             } else if (c == ',') {
-                jsonFormat.append(c + "\n");
+                jsonFormat.append(c).append("\n");
                 jsonFormat.append(getSpaceOrTab(tabNum));
             } else if (c == ':') {
-                jsonFormat.append(c + " ");
+                jsonFormat.append(c).append(" ");
             } else if (c == '[') {
                 tabNum++;
                 char next = strJson.charAt(i + 1);
                 if (next == ']') {
                     jsonFormat.append(c);
                 } else {
-                    jsonFormat.append(c + "\n");
+                    jsonFormat.append(c).append("\n");
                     jsonFormat.append(getSpaceOrTab(tabNum));
                 }
             } else if (c == ']') {
@@ -79,7 +80,7 @@ public class FileFunc {
                 if (last == '[') {
                     jsonFormat.append(c);
                 } else {
-                    jsonFormat.append("\n" + getSpaceOrTab(tabNum) + c);
+                    jsonFormat.append("\n").append(getSpaceOrTab(tabNum)).append(c);
                 }
             } else {
                 jsonFormat.append(c);
@@ -90,7 +91,7 @@ public class FileFunc {
     }
 
     private static String getSpaceOrTab(int tabNum) {
-        StringBuffer sbTab = new StringBuffer();
+        StringBuilder sbTab = new StringBuilder();
         for (int i = 0; i < tabNum; i++) {
             sbTab.append('\t');
         }
@@ -180,7 +181,7 @@ public class FileFunc {
         String tmp;
         if (!file.exists())
             file.mkdirs();
-        file = new File(getSDPath() + "//xdyBlaster//" + fileName);
+        file = new File(getSDPath() + "//xdyBlaster//" + "default.net");// + fileName);
         if (file.exists()) {
             try {
                 String str;
@@ -189,60 +190,78 @@ public class FileFunc {
                 DataInputStream dis = new DataInputStream(fis);
                 detonatorDatas.clear();
                 str = readOneLine(dis);
-
-                index = str.indexOf(',');
-                setting.setRow(str.substring(0, index));
-                if (setting.getRow() == 0)
-                    setting.setRow(1);
-                str = str.substring(index + 1);
-
-                index = str.indexOf(',');
-                setting.setHole(str.substring(0, index));
-                str = str.substring(index + 1);
-
-                index = str.indexOf(',');
-                setting.setRowDelay(str.substring(0, index));
-                str = str.substring(index + 1);
-
-                index = str.indexOf(',');
-                setting.setHoleDelay(str.substring(0, index));
-                str = str.substring(index + 1);
-
-                if (Integer.parseInt(str) == 1)
-                    setting.setRowSequence(true);
-                else
-                    setting.setRowSequence(false);
+                String[] rowData = str.split(",");
+                setting.setRow(1);
+                setting.setHole("10000");
+                setting.setRowDelay("0");
+                setting.setHoleDelay("0");
+                setting.setRowSequence(false);
+                setting.setTotal(0);
+                setting.setDate(0);
+                if (rowData.length >= 5) {
+                    setting.setRow(rowData[0]);
+                    setting.setHole(rowData[1]);
+                    setting.setRowDelay(rowData[2]);
+                    setting.setHoleDelay(rowData[3]);
+                    setting.setRowSequence(rowData[4].equals("1"));
+                }
+                if (rowData.length >= 7) {
+                    int c;
+                    c = Integer.parseInt(rowData[5]);
+                    setting.setTotal(c);
+                    long d;
+                    d = Long.parseLong(rowData[6]);
+                    setting.setDate(d);
+                }
+                String[] fileData;
 
                 while (true) {
                     DetonatorData data = new DetonatorData();
                     str = readOneLine(dis);
                     if (str.isEmpty())
                         break;
+                    fileData = str.split(",");
                     try {
-                        index = str.indexOf(',');
-                        data.setRowNum(Integer.parseInt(str.substring(0, index)));
-                        str = str.substring(index + 1);
-                        index = str.indexOf(',');
-                        data.setHoleNum(Integer.parseInt(str.substring(0, index)));
-                        str = str.substring(index + 1);
-                        index = str.indexOf(',');
-                        tmp = str.substring(0, index).toLowerCase();
+                        data.setRowNum(Integer.parseInt(fileData[0]));
+                        data.setHoleNum(Integer.parseInt(fileData[1]));
+                        tmp = fileData[2].toLowerCase();
                         long d = Long.valueOf(tmp, 16);
                         data.setId(d);
-                        str = str.substring(index + 1);
-                        index = str.indexOf(',');
-                        data.setDelay(Integer.parseInt(str.substring(0, index)));
-                        str = str.substring(index + 1);
-                        index = str.indexOf(',');
-                        data.setBlasterTime(Integer.parseInt(str.substring(0, index)));
-                        str = str.substring(index + 1);
-                        index = str.indexOf(',');
-                        data.setMainFrequency(Integer.parseInt(str.substring(0, index)));
-                        str = str.substring(index + 1);
-                        index = str.indexOf(',');
-                        data.setSubFrequency(Integer.parseInt(str.substring(0, index)));
-                        str = str.substring(index + 1);
-                        data.setUuid(str);
+                        data.setDelay(Integer.parseInt(fileData[3]));
+                        data.setBlasterTime(Integer.parseInt(fileData[4]));
+                        data.setMainFrequency(Integer.parseInt(fileData[5]));
+                        data.setSubFrequency(Integer.parseInt(fileData[6]));
+                        data.setUuid(fileData[7]);
+
+//                        index = str.indexOf(',');
+//                        data.setRowNum(Integer.parseInt(str.substring(0, index)));
+//                        str = str.substring(index + 1);
+//                        index = str.indexOf(',');
+//                        data.setHoleNum(Integer.parseInt(str.substring(0, index)));
+//                        str = str.substring(index + 1);
+//                        index = str.indexOf(',');
+//                        tmp = str.substring(0, index).toLowerCase();
+//                        long d = Long.valueOf(tmp, 16);
+//                        data.setId(d);
+
+//                        str = str.substring(index + 1);
+//                        index = str.indexOf(',');
+//                        data.setDelay(Integer.parseInt(str.substring(0, index)));
+
+//                        str = str.substring(index + 1);
+//                        index = str.indexOf(',');
+//                        data.setBlasterTime(Integer.parseInt(str.substring(0, index)));
+
+//                        str = str.substring(index + 1);
+//                        index = str.indexOf(',');
+//                        data.setMainFrequency(Integer.parseInt(str.substring(0, index)));
+
+//                        str = str.substring(index + 1);
+//                        index = str.indexOf(',');
+//                        data.setSubFrequency(Integer.parseInt(str.substring(0, index)));
+
+//                        str = str.substring(index + 1);
+//                        data.setUuid(str);
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -288,41 +307,28 @@ public class FileFunc {
         if (file.exists()) {
             try {
                 String str;
-                int index;
                 FileInputStream fis = new FileInputStream(file);
                 DataInputStream dis = new DataInputStream(fis);
                 str = readOneLine(dis);
-
-                index = str.indexOf(',');
-                if (index == -1)
+                String[] rowData = str.split(",");
+                if (rowData.length < 5)
                     return false;
-                setting.setRow(str.substring(0, index));
-                if (setting.getRow() == 0)
-                    setting.setRow(1);
-                str = str.substring(index + 1);
+                setting.setRow(rowData[0]);
+                setting.setHole(rowData[1]);
+                setting.setRowDelay(rowData[2]);
+                setting.setHoleDelay(rowData[3]);
+                setting.setRowSequence(rowData[4].equals("1"));
+                setting.setTotal(0);
+                setting.setDate(0);
+                if (rowData.length < 7)
+                    return true;
+                int c;
+                c = Integer.parseInt(rowData[5]);
+                setting.setTotal(c);
+                long d;
+                d = Long.parseLong(rowData[6]);
+                setting.setDate(d);
 
-                index = str.indexOf(',');
-                if (index == -1)
-                    return false;
-                setting.setHole(str.substring(0, index));
-                str = str.substring(index + 1);
-
-                index = str.indexOf(',');
-                if (index == -1)
-                    return false;
-                setting.setRowDelay(str.substring(0, index));
-                str = str.substring(index + 1);
-
-                index = str.indexOf(',');
-                if (index == -1)
-                    return false;
-                setting.setHoleDelay(str.substring(0, index));
-                str = str.substring(index + 1);
-
-                if (Integer.parseInt(str) == 1)
-                    setting.setRowSequence(true);
-                else
-                    setting.setRowSequence(false);
                 dis.close();
                 fis.close();
                 return true;
@@ -349,7 +355,9 @@ public class FileFunc {
             int i = 0, j;
             if (setting.isRowSequence())
                 i = 1;
-            str = String.format("%d,%d,%d,%d,%d\n", setting.getRow(), setting.getHole(), setting.getRowDelay(), setting.getHoleDelay(), i);
+            setting.setDate(System.currentTimeMillis());
+            setting.setTotal(detonatorDatas.size());
+            str = String.format("%d,%d,%d,%d,%d,%d,%d\n", setting.getRow(), setting.getHole(), setting.getRowDelay(), setting.getHoleDelay(), i, setting.getTotal(), setting.getDate());
             b = str.getBytes();
             dos.write(b, 0, b.length);
             for (DetonatorData data : detonatorDatas) {
@@ -512,7 +520,7 @@ public class FileFunc {
         int date, year, day;
         int i;
         uuid[0] = 0;
-        uuid[1] = (char) (b[ofs + 0] & 0x7f);
+        uuid[1] = (char) (b[ofs] & 0x7f);
         uuid[2] = (char) (b[ofs + 1] & 0x7f);
         uuid[5] = (char) (b[ofs + 2] & 0x7f);
         uuid[8] = (char) (b[ofs + 3] & 0x7f);
@@ -549,9 +557,7 @@ public class FileFunc {
     public static boolean isChar(char c) {
         if ((c >= '0') && (c <= '9'))
             return true;
-        if ((c >= 'A') && (c <= 'Z'))
-            return true;
-        return false;
+        return (c >= 'A') && (c <= 'Z');
     }
 
     public static void getUuidData(byte[] b, int ofs, UuidData uuidData) {
@@ -580,10 +586,33 @@ public class FileFunc {
                     break;
             }
         }
+        return i == 13;
+    }
+
+    public static boolean checkFbhString(String str) {
+        byte[] b = str.getBytes();
+        char c;
+        int i;
+        if (b.length != 13)
+            return false;
+        for (i = 0; i < 13; i++) {
+            c = (char) (b[i] & 0x0ff);
+            if (c < '0' || c > '9') {
+                if (!((i == 0) || (i == 1) || (i == 7)))
+                    break;
+            }
+        }
         if (i != 13)
             return false;
-        else
-            return true;
+        if (b[3] > '1')
+            return false;
+        if (b[3] == '1' && b[4] > '2')
+            return false;
+        if (b[5] > '3')
+            return false;
+        if (b[5] == '3' && b[6] > '1')
+            return false;
+        return true;
     }
 
     public static String getRealUuid(String str) {
@@ -619,10 +648,25 @@ public class FileFunc {
 
     public static void saveAuthFile(String fileName, String str, String htid, String xmbh, String dwdm) {
         byte[] b;
+        String fname;
+        FileOutputStream fos = null;
+        DataOutputStream dos = null;
+
+        boolean o = false;
+        //fname = fileName;
+        fname = fileName.replace('/', '_');
+        fname = fname.replace('\\', '_');
         File file = new File(getSDPath() + "//xdyBlaster//auth");
         if (!file.exists())
             file.mkdirs();
-        file = new File(getSDPath() + "//xdyBlaster//auth//" + fileName + ".json");
+        file = new File(getSDPath() + "//xdyBlaster//auth//" + fname + ".json");
+        try {
+            fos = new FileOutputStream(file);
+            dos = new DataOutputStream(fos);
+            o = true;
+        } catch (Exception e) {
+            file = new File(getSDPath() + "//xdyBlaster//auth//" + FileFunc.getDate() + ".json");
+        }
         try {
             JSONObject lgxx = new JSONObject(str);
             JSONObject jsonObject = new JSONObject();
@@ -631,12 +675,15 @@ public class FileFunc {
             jsonObject.put("dwdm", dwdm);
             jsonObject.put("lgxx", lgxx);
             b = jsonObject.toString().getBytes();
-            FileOutputStream fos = new FileOutputStream(file);
-            DataOutputStream dos = new DataOutputStream(fos);
+            if (!o) {
+                fos = new FileOutputStream(file);
+                dos = new DataOutputStream(fos);
+            }
             dos.write(b, 0, b.length);
             dos.flush();
             dos.close();
             fos.close();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -795,7 +842,7 @@ public class FileFunc {
         resultData.upD = "0";
         resultData.upG = "0";
         resultDataList.add(resultData);
-        Collections.sort(resultDataList, new ResultDataComparator());
+        resultDataList.sort(new ResultDataComparator());
         try {
             jsonArray = new JSONArray();
             for (int i = 0; i < resultDataList.size(); i++) {
@@ -858,7 +905,7 @@ public class FileFunc {
     }
 
 
-    private static int[] crc16tb =
+    private static final int[] crc16tb =
             {
                     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
                     0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
@@ -915,7 +962,7 @@ public class FileFunc {
 
     @SuppressLint("DefaultLocale")
     public static String makeUuidString(String str, int n1, int n2) {
-        String box,f;
+        String box, f;
         String head = str.substring(0, 8);
 
         int b0, b1;
@@ -980,4 +1027,206 @@ public class FileFunc {
 
 
     }
+
+    /**
+     * 删除单个文件
+     *
+     * @param filePath 被删除文件的文件名
+     * @return 文件删除成功返回true，否则返回false
+     */
+    public static boolean deleteFile(String filePath) {
+        File file = new File(filePath);
+        if (file.isFile() && file.exists()) {
+            return file.delete();
+        }
+        return false;
+    }
+
+    /**
+     * 删除文件夹以及目录下的文件
+     *
+     * @param filePath 被删除目录的文件路径
+     * @return 目录删除成功返回true，否则返回false
+     */
+    public static boolean deleteDirectory(String filePath) {
+        boolean flag = false;
+        //如果filePath不以文件分隔符结尾，自动添加文件分隔符
+        if (!filePath.endsWith(File.separator)) {
+            filePath = filePath + File.separator;
+        }
+        File dirFile = new File(filePath);
+        if (!dirFile.exists() || !dirFile.isDirectory()) {
+            return false;
+        }
+        flag = true;
+        File[] files = dirFile.listFiles();
+        //遍历删除文件夹下的所有文件(包括子目录)
+        for (int i = 0; i < files.length; i++) {
+            if (files[i].isFile()) {
+                //删除子文件
+                flag = deleteFile(files[i].getAbsolutePath());
+                if (!flag) break;
+            } else {
+                //删除子目录
+                flag = deleteDirectory(files[i].getAbsolutePath());
+                if (!flag) break;
+            }
+        }
+        if (!flag) return false;
+        //删除当前空目录
+        return dirFile.delete();
+    }
+
+    /**
+     * 根据路径删除指定的目录或文件，无论存在与否
+     *
+     * @param filePath 要删除的目录或文件
+     * @return 删除成功返回 true，否则返回 false。
+     */
+    public static boolean DeleteFolder(String filePath) {
+        File file = new File(getSDPath() + filePath);
+        if (!file.exists()) {
+            return false;
+        } else {
+            if (file.isFile()) {
+                // 为文件时调用删除文件方法
+                return deleteFile(getSDPath() + filePath);
+            } else {
+                // 为目录时调用删除目录方法
+                return deleteDirectory(getSDPath() + filePath);
+            }
+        }
+    }
+
+    public static List<AuthHistoryData> loadAuthHistory() {
+        List<AuthHistoryData> authHistoryDataArrayList = new ArrayList<>();
+        File file = new File(getSDPath() + "//xdyBlaster//auth//auth.txt");
+        if (file.exists()) {
+            try {
+                String str;
+                String[] fileData;
+                AuthHistoryData authHistoryData;
+                FileInputStream fis = new FileInputStream(file);
+                DataInputStream dis = new DataInputStream(fis);
+                while (true) {
+                    str = readOneLine(dis);
+                    if (str.isEmpty())
+                        break;
+                    fileData = str.split(",");
+                    if (fileData.length == 7) {
+                        authHistoryData = new AuthHistoryData();
+                        authHistoryData.setName(fileData[0]);
+                        authHistoryData.setHtid(fileData[1]);
+                        authHistoryData.setXmbh(fileData[2]);
+                        authHistoryData.setDwdm(fileData[3]);
+                        authHistoryData.setBprysfz(fileData[4]);
+                        authHistoryData.setJd(fileData[5]);
+                        authHistoryData.setWd(fileData[6]);
+                        authHistoryDataArrayList.add(authHistoryData);
+                    }
+
+                }
+                dis.close();
+                fis.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return authHistoryDataArrayList;
+    }
+
+
+    public static void saveAuthHistory(List<AuthHistoryData> authHistoryDataList) {
+        File file = new File(getSDPath() + "//xdyBlaster//auth");
+        String str;
+        byte[] b;
+        int i;
+        if (!file.exists())
+            file.mkdirs();
+        file = new File(getSDPath() + "//xdyBlaster//auth//auth.txt");
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            DataOutputStream dos = new DataOutputStream(fos);
+            i = 0;
+            for (AuthHistoryData data : authHistoryDataList) {
+                str = String.format("%s,%s,%s,%s,%s,%s,%s\n", data.getName(), data.getHtid(), data.getXmbh(), data.getDwdm(), data.getBprysfz(), data.getJd(), data.getWd());
+                b = str.getBytes();
+                dos.write(b, 0, b.length);
+                i++;
+                if (i > 50)
+                    break;
+            }
+            dos.flush();
+            dos.close();
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void saveFixdelay(List<String> strings) {
+        File file = new File(getSDPath() + "//xdyBlaster");
+        String str;
+        StringBuilder stringBuilder = new StringBuilder();
+        byte[] b;
+        int i;
+        if (!file.exists())
+            file.mkdirs();
+        file = new File(getSDPath() + "//xdyBlaster//fixdelay.txt");
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            DataOutputStream dos = new DataOutputStream(fos);
+            i = 0;
+            for (String s : strings) {
+                if (i != 0)
+                    stringBuilder.append(",");
+                stringBuilder.append(s);
+                i++;
+            }
+            stringBuilder.append("\n");
+            b = stringBuilder.toString().getBytes();
+            dos.write(b, 0, b.length);
+            dos.flush();
+            dos.close();
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static List<String> loadFixdelay() {
+        List<String> strings = new ArrayList<>();
+        File file = new File(getSDPath() + "//xdyBlaster//fixdelay.txt");
+        if (file.exists()) {
+            try {
+                String str;
+                String[] fileData;
+
+                FileInputStream fis = new FileInputStream(file);
+                DataInputStream dis = new DataInputStream(fis);
+                while (true) {
+                    str = readOneLine(dis);
+                    if (str.isEmpty())
+                        break;
+                    fileData = str.split(",");
+                    if (fileData.length == 20) {
+                        Collections.addAll(strings, fileData);
+                        break;
+                    }
+
+                }
+                dis.close();
+                fis.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if (strings.size() != 20) {
+            strings.clear();
+            for (int i = 0; i < 20; i++)
+                strings.add("100");
+        }
+        return strings;
+    }
+
 }

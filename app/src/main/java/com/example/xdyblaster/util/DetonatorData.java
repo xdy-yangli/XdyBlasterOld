@@ -15,6 +15,24 @@ public class DetonatorData {
     private int rowNumErr;
     private int holeNumErr;
     private int blasterTimeErr;
+    private int cap;
+    private float bridge;
+
+    public int getCap() {
+        return cap;
+    }
+
+    public void setCap(int cap) {
+        this.cap = cap;
+    }
+
+    public float getBridge() {
+        return bridge;
+    }
+
+    public void setBridge(float bridge) {
+        this.bridge = bridge;
+    }
 
     public int getRowNumErr() {
         return rowNumErr;

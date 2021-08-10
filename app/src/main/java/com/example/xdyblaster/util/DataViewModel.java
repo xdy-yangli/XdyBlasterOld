@@ -23,11 +23,13 @@ public class DataViewModel extends AndroidViewModel {
     //public Drawable icon4, icon4s, icon5, icon5s, icon6, icon6s;
     public String fileName;
     public boolean ok, dataChanged = false;
+    public boolean dataShift = false;
     public boolean enMonitorVolt;
     public boolean fileLoaded, fileReload = false;
     public int battStatus;
     public float[] vData = new float[4];
     public int ver, countOK;
+    public int checkVolt;
     // public LatLng latLng;
 
     public MutableLiveData<Integer> volt = new MutableLiveData<>();

@@ -42,6 +42,7 @@ import com.example.xdyblaster.Adapter.SectionsPagerAdapter;
 import com.example.xdyblaster.fragment.FragmentData;
 import com.example.xdyblaster.fragment.FragmentDelete;
 import com.example.xdyblaster.fragment.FragmentEdit;
+import com.example.xdyblaster.fragment.FragmentFixdelay;
 import com.example.xdyblaster.fragment.FragmentLoad;
 import com.example.xdyblaster.fragment.FragmentSetDelay;
 import com.example.xdyblaster.fragment.FragmentSort;
@@ -58,8 +59,14 @@ import com.example.xdyblaster.util.SharedPreferencesUtils;
 import com.example.xdyblaster.util.UuidData;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -69,7 +76,6 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import cn.pda.scan.BarcodeReceiver;
 import cn.pda.scan.ScanUtil;
-import io.realm.Realm;
 import me.jessyan.autosize.internal.CustomAdapt;
 import utils.SerialPortUtils;
 
@@ -85,6 +91,7 @@ import static com.example.xdyblaster.util.CommDetonator.COMM_DELAY;
 import static com.example.xdyblaster.util.CommDetonator.COMM_GET_BATT;
 import static com.example.xdyblaster.util.CommDetonator.COMM_GET_UUID_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_IDLE;
+import static com.example.xdyblaster.util.CommDetonator.COMM_POWER_12V;
 import static com.example.xdyblaster.util.CommDetonator.COMM_POWER_9V;
 import static com.example.xdyblaster.util.CommDetonator.COMM_POWER_ON;
 import static com.example.xdyblaster.util.CommDetonator.COMM_READ_UID;
@@ -99,7 +106,7 @@ import static com.example.xdyblaster.util.FileFunc.getUuidData;
 public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, DetonatorAdapter.OnItemSelectedListener {
     private static final String[] popupTxtFile = {"1.新建方案", "2.另存方案", "3.打开方案", "4.删除方案", "5.扫描网络"};
     private static final String[] popupTxtArea = {"1.删除雷管", "2.插入雷管", "3.修改参数"};
-    private static final String[] popupTxtDetonator = {"1.清除方案", "2.删除雷管", "3.添加雷管", "4.修改延时", "5.扫描网络", "6.排序方式"};
+    private static final String[] popupTxtDetonator = {"1.保存方案", "2.载入方案", "3.历史方案", "4.清除方案", "5.删除雷管", "6.添加雷管", "7.修改延时", "8.扫描网络", "9.排序方式"};
 
 
     @BindView(R.id.view_pager)
@@ -143,14 +150,17 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
     public boolean checkOnline;
     public boolean powerOn = false;
     private SerialPortUtils serialPortUtils;
+    private final String[] recordName = {"R1.net", "R2.net", "R3.net", "R4.net", "R5.net"};
+    private final String[] historyName = {"h0.net", "h1.net", "h2.net", "h3.net", "h4.net", "h5.net", "h6.net", "h7.net", "h8.net", "h9.net"};
     @SuppressLint("HandlerLeak")
     Handler handler = new Handler() {
+        @SuppressLint("SetTextI18n")
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             switch (msg.what) {
                 case 0:
-                    if (battEnable && commEnable) {
+                    if (battEnable && commEnable && (!commTask.running)) {
                         commTask.running = false;
                         commTask.cancel(true);
                         commTask = new CommTask(DelayPrjActivity.this);
@@ -207,39 +217,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
             }
         }
     };
-
-//    Thread threadF1 = new Thread(new Runnable() {
-//        @Override
-//        public void run() {
-//            int count;
-//            Intent intent = new Intent();
-//            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//            intent.setAction("android.rfid.FUN_KEY");
-//            intent.putExtra("keyCode", 137);
-//            intent.putExtra("keydown", true);
-//            count = 20;
-//            threadF1Stop = false;
-//            threadF1Run = true;
-//            while (count > 0) {
-//                sendBroadcast(intent);
-//                serialPortUtils.DelayMs(100);
-//                count--;
-//                if (count == 0 || threadF1Stop) {
-//                    intent.putExtra("keydown", false);
-//                    sendBroadcast(intent);
-//                    break;
-//                }
-//            }
-//            Message message = new Message();
-//            message.what = 131;
-//            message.arg1 = 0;
-//            handler.sendMessage(message);
-//            threadF1Run = false;
-//        }
-//    });
-
     boolean threadF1Stop, threadF1Run;
-
     CommTask commTask;
     FragmentVolt frVolt;
     Timer battTimer = null;
@@ -257,7 +235,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
     InfoDialog infoDialog;
     int maxCount;
     int itemSelect = -1;
-    String[] delayTimeString = new String[4];
+    String[] delayTimeString = new String[5];
     int delayTimeSelect;
     boolean scanning = false;
     int sortType, sortUpDown;
@@ -265,7 +243,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
     FragmentLoad.OnExitListener onExitListener;
     ObservVolt observVolt;
     int oldIndex = -1;
-    Realm mRealm = Realm.getDefaultInstance();
+    //Realm mRealm = Realm.getDefaultInstance();
     BarcodeReceiver barcodeReceiver;
     private ScanUtil scanUtil;
 
@@ -426,32 +404,6 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
         sendBroadcast(intent);
     }
 
-//    @SuppressLint({"DefaultLocale", "SetTextI18n"})
-//    @Override
-//    public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
-//        if (keyCode == KEYCODE_UNKNOWN) {
-//
-//            try {
-//                {
-//                    threadF1Stop = true;
-//                    String tmp = event.getCharacters();
-//                    if (!FileFunc.checkUuidString(tmp))
-//                        return super.onKeyMultiple(keyCode, repeatCount, event);
-//                    uuidStr = tmp;
-//                    scanID = 0;
-//                    if (isFocus) {
-//                        if (!checkSameDetonalor(uuidStr, -1)) {
-//                            addDetonatorData();
-//                            tvStatus.setText("添加雷管 " + uuidStr);
-//                        }
-//                    }
-//                }
-//            } catch (Exception e) {
-//                scanID = 0;
-//            }
-//        }
-//        return super.onKeyMultiple(keyCode, repeatCount, event);
-//    }
 
     @Override
     protected void onDestroy() {
@@ -466,7 +418,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
         commTask.cancel(true);
         //unregisterReceiver(myReceiver);
 //        dataViewModel.keyHandler = null;
-        mRealm.close();
+//        mRealm.close();
         unregisterReceiver(barcodeReceiver);
         unregisterReceiver(mBatInfoReceiver);
         unregisterReceiver(homePressReceiver);
@@ -518,6 +470,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
         super.onWindowFocusChanged(hasFocus);
     }
 
+    @SuppressLint("NonConstantResourceId")
     @OnClick({R.id.btSetting, R.id.btEdit, R.id.btArea, R.id.btDetonator, R.id.tvID, R.id.tvTime, R.id.tvRow, R.id.tvHole})
     public void onViewClicked(View view) {
         if (System.currentTimeMillis() < keyTime + 1000)
@@ -529,142 +482,49 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
                 break;
             case R.id.btEdit:
                 startScan(0);
-//                stopScan();
-//                showPopupMenuOther(view, popupTxtFile, new AdapterView.OnItemClickListener() {
-//                    @SuppressLint("DefaultLocale")
-//                    @Override
-//                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                        popupMenuOther.dismiss();
-//                        int i, j, k;
-//                        switch (position) {
-//                            case 0:
-//                                FragmentNew fragmentNew = new FragmentNew();
-//                                fragmentNew.setOnButtonClickListener(new FragmentNew.OnButtonClickListener() {
-//                                    @Override
-//                                    public void onButtonClick(int index) {
-//                                        if (index == 1)
-//                                            handler.postDelayed(new Runnable() {
-//                                                @Override
-//                                                public void run() {
-//                                                    finish();
-//                                                    overridePendingTransition(0, 0);
-//                                                    startActivity(getIntent());
-//                                                    overridePendingTransition(0, 0);
-//                                                }
-//                                            }, 100);
-//                                    }
-//                                });
-//                                fragmentNew.show(getSupportFragmentManager(), "new");
-//                                break;
-//                            case 1:
-//                                infoDialog = new InfoDialog();
-//                                infoDialog.setTitle("保存文件");
-//                                infoDialog.setBtnEnable(true);
-//                                infoDialog.setEdit1("文件名");
-//                                infoDialog.setOnButtonClickListener(new InfoDialog.OnButtonClickListener() {
-//                                    @Override
-//                                    public void onButtonClick(int index, String str) {
-//                                        if (index == 1) {
-//                                            runOnUiThread(new Runnable() {
-//                                                @Override
-//                                                public void run() {
-//                                                    dataViewModel.setFileName(str + ".net");
-//                                                    FileFunc.saveDetonatorFile(dataViewModel.fileName, dataViewModel.detonatorSetting, dataViewModel.detonatorDatas);
-//                                                }
-//                                            });
-//                                        }
-//
-//                                    }
-//                                });
-//                                infoDialog.show(getSupportFragmentManager(), "");
-//                                break;
-//                            case 2:
-//                                showOpenFileWindow("打开文件", ListView.CHOICE_MODE_SINGLE, new View.OnClickListener() {
-//                                    @Override
-//                                    public void onClick(View v) {
-//                                        String tmp;
-//                                        int i, s;
-//                                        s = lsvOpenFile.getCheckedItemPosition();
-//                                        if (s != -1) {
-//                                            tmp = lsvOpenFile.getAdapter().getItem(s).toString();
-//                                            Log.d("file", tmp);
-//                                            dataViewModel.setFileName(tmp);
-//                                            SharedPreferences mShare = getSharedPreferences("setting", Context.MODE_PRIVATE);
-//                                            SharedPreferences.Editor mEdit = mShare.edit();
-//                                            mEdit.putInt("file", 1);
-//                                            mEdit.putString("filename", dataViewModel.fileName);
-//                                            mEdit.apply();
-//                                            dataViewModel.fileLoaded = false;
-//                                            popupOpenFile.dismiss();
-//                                            finish();
-//                                            overridePendingTransition(0, 0);
-//                                            startActivity(getIntent());
-//                                            overridePendingTransition(0, 0);
-//                                        }
-//                                    }
-//                                });
-//                                break;
-//                            case 3:
-//                                showOpenFileWindow("删除文件", ListView.CHOICE_MODE_MULTIPLE, new View.OnClickListener() {
-//                                    @Override
-//                                    public void onClick(View v) {
-//                                        for (int i = 0; i < lsvOpenFile.getAdapter().getCount(); i++) {
-//                                            if (lsvOpenFile.isItemChecked(i)) {
-//                                                File file = new File(getSDPath() + "//xdyBlaster//" + lsvOpenFile.getAdapter().getItem(i).toString());
-//                                                if (file.exists() && file.isFile())
-//                                                    file.delete();
-//                                            }
-//                                        }
-//                                        popupOpenFile.dismiss();
-//                                    }
-//                                });
-//                                break;
-//                            case 4:
-//                                infoDialog = new InfoDialog();
-//                                infoDialog.setTitle("扫描网络");
-//                                infoDialog.setProgressEnable(true);
-//                                infoDialog.setMessage(String.format("发现%d发雷管", 0));
-//                                infoDialog.setCancelable(false);
-//                                infoDialog.setBtn2Enable(true);
-//                                infoDialog.setChronometerEnable(true);
-//                                infoDialog.setProgressEnable(true);
-//                                infoDialog.setOnButtonClickListener(new InfoDialog.OnButtonClickListener() {
-//                                    @Override
-//                                    public void onButtonClick(int index, String str) {
-//                                        commTask.running = false;
-//                                        commTask.cancel(true);
-//                                        commTask = new CommTask(DelayPrjActivity.this, handlerVolt);
-//                                        commTask.execute(1, COMM_IDLE);
-//                                        battEnable = true;
-//                                    }
-//                                });
-//                                infoDialog.show(getSupportFragmentManager(), "info");
-//                                battEnable = false;
-//                                commTask.running = false;
-//                                commTask.cancel(true);
-//                                commTask = new CommTask(DelayPrjActivity.this, handlerVolt);
-//                                commTask.execute(5, COMM_RESET_DETONATOR, COMM_BLIND_SCAN, COMM_BLIND_SCAN_STATUS, COMM_READ_DATA, COMM_IDLE);
-//                                break;
-//                        }
-//
-//
-//                    }
-//                });
                 break;
             case R.id.btArea:
                 getDelayString();
-                String[] popupString = new String[4];
+                String[] popupString = new String[5];
                 popupString[0] = "F1时差" + delayTimeString[0];
                 popupString[1] = "F2时差" + delayTimeString[1];
                 popupString[2] = "F1时差" + delayTimeString[2];
                 popupString[3] = "F2时差" + delayTimeString[3];
+                popupString[4] = "固定延时";
                 showPopupMenuOther(view, popupString, new AdapterView.OnItemClickListener() {
                     @SuppressLint("DefaultLocale")
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         popupMenuOther.dismiss();
-                        delayTimeSelect = position;
-                        loadSetting();
+                        if(delayTimeSelect != position) {
+                            delayTimeSelect = position;
+                            SharedPreferencesUtils.setParam(DelayPrjActivity.this,"delayTimeSelect",position);
+                        }
+                        if(delayTimeSelect==4)
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    FragmentFixdelay fragmentFixdelay=new FragmentFixdelay();
+                                    fragmentFixdelay.setCancelable(false);
+                                    fragmentFixdelay.onFixdelayExitListener=new FragmentFixdelay.OnFixdelayExitListener() {
+                                        @Override
+                                        public void onFixdelayExit(int index, String str) {
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    SharedPreferencesUtils.setParam(DelayPrjActivity.this,"fixDelay",Integer.parseInt(str));
+                                                    SharedPreferencesUtils.setParam(DelayPrjActivity.this,"fixArea",index);
+                                                    loadSetting();
+                                                }
+                                            });
+                                        }
+                                    };
+                                    fragmentFixdelay.setDefaultCheck((int)SharedPreferencesUtils.getParam(DelayPrjActivity.this,"fixArea",0));
+                                    fragmentFixdelay.show(getSupportFragmentManager(),"delay");
+                                }
+                            });
+                        else
+                            loadSetting();
                     }
                 });
                 break;
@@ -677,6 +537,72 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
                         int i, j;
                         switch (position) {
                             case 0:
+                                showOpenFileWindow(position, "保存方案", ListView.CHOICE_MODE_SINGLE, new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        String tmp;
+                                        int i, s;
+                                        s = lsvOpenFile.getCheckedItemPosition();
+                                        if (s != -1) {
+                                            tmp = String.format("R%s.net", s + 1);
+                                            Log.d("file", tmp);
+                                            FileFunc.saveDetonatorFile(dataViewModel.fileName, dataViewModel.detonatorSetting, dataViewModel.detonatorDatas);
+                                            copySdcardFile(getSDPath() + "//xdyBlaster//default.net", getSDPath() + "//xdyBlaster//record//" + tmp);
+                                            popupOpenFile.dismiss();
+                                        }
+                                    }
+                                });
+                                break;
+                            case 1:
+                                showOpenFileWindow(position, "读取方案", ListView.CHOICE_MODE_SINGLE, new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        String tmp;
+                                        int i, s;
+                                        s = lsvOpenFile.getCheckedItemPosition();
+                                        if (s != -1) {
+                                            tmp = lsvOpenFile.getAdapter().getItem(s).toString();
+                                            if (!tmp.equals("空")) {
+                                                shiftRecord();
+                                                tmp = String.format("R%s.net", s + 1);
+                                                Log.d("file", tmp);
+                                                copySdcardFile(getSDPath() + "//xdyBlaster//record//" + tmp, getSDPath() + "//xdyBlaster//default.net");
+                                                dataViewModel.fileLoaded = false;
+                                                popupOpenFile.dismiss();
+                                                finish();
+                                                overridePendingTransition(0, 0);
+                                                startActivity(getIntent());
+                                                overridePendingTransition(0, 0);
+                                            }
+                                        }
+                                    }
+                                });
+                                break;
+                            case 2:
+                                showOpenFileWindow(2, "历史方案", ListView.CHOICE_MODE_SINGLE, new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        String tmp;
+                                        int i, s;
+                                        s = lsvOpenFile.getCheckedItemPosition();
+                                        if (s != -1) {
+                                            tmp = lsvOpenFile.getAdapter().getItem(s).toString();
+                                            Log.d("file", tmp);
+                                            if (!tmp.equals("空")) {
+                                                tmp = String.format("h%s.net", s);
+                                                copySdcardFile(getSDPath() + "//xdyBlaster//history//" + tmp, getSDPath() + "//xdyBlaster//default.net");
+                                                dataViewModel.fileLoaded = false;
+                                                popupOpenFile.dismiss();
+                                                finish();
+                                                overridePendingTransition(0, 0);
+                                                startActivity(getIntent());
+                                                overridePendingTransition(0, 0);
+                                            }
+                                        }
+                                    }
+                                });
+                                break;
+                            case 3:
                                 InfoDialog dialog = new InfoDialog();
                                 dialog.setTitle("清除方案");
                                 dialog.setMessage("是否清除全部数据？");
@@ -684,10 +610,15 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
                                 dialog.setOnButtonClickListener(new InfoDialog.OnButtonClickListener() {
                                     @Override
                                     public void onButtonClick(int index, String str) {
-                                        if (index == 1) {
+                                        if (index == 1 && dataViewModel.detonatorDatas.size() != 0) {
                                             runOnUiThread(new Runnable() {
                                                 @Override
                                                 public void run() {
+                                                    shiftRecord();
+//                                                    if (dataViewModel.dataChanged) {
+//                                                        FileFunc.saveDetonatorFile(dataViewModel.fileName, dataViewModel.detonatorSetting, dataViewModel.detonatorDatas);
+//                                                        shiftRecord();
+//                                                    }
                                                     dataViewModel.detonatorDatas.clear();
                                                     FileFunc.saveDetonatorFile(dataViewModel.fileName, dataViewModel.detonatorSetting, dataViewModel.detonatorDatas);
                                                     reStart();
@@ -698,16 +629,16 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
                                 });
                                 dialog.show(getSupportFragmentManager(), "info");
                                 break;
-                            case 1:
+                            case 4:
                                 showEditDialog(0, vpNum);
                                 break;
-                            case 2:
+                            case 5:
                                 showEditDialog(2, vpNum);
                                 break;
-                            case 3:
+                            case 6:
                                 showEditDialog(3, vpNum);
                                 break;
-                            case 4:
+                            case 7:
                                 if (dataViewModel.detonatorDatas.size() == 0) {
                                     infoDialog = new InfoDialog();
                                     infoDialog.setTitle("扫描网络");
@@ -735,9 +666,15 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
                                     commTask.running = false;
                                     commTask.cancel(true);
                                     commTask = new CommTask(DelayPrjActivity.this);
-                                    commTask.execute(10, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_RESET_DETONATOR,
-                                            COMM_BLIND_SCAN, COMM_BLIND_SCAN_PROGRESS, COMM_IDLE,
-                                            COMM_GET_UUID_BUFFER, COMM_IDLE, COMM_STOP_OUTPUT);
+                                    int h = (int) SharedPreferencesUtils.getParam(DelayPrjActivity.this, "high_scan", 0);
+                                    if (h == 1)
+                                        commTask.execute(10, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_RESET_DETONATOR,
+                                                COMM_BLIND_SCAN, COMM_BLIND_SCAN_PROGRESS, COMM_IDLE,
+                                                COMM_GET_UUID_BUFFER, COMM_IDLE, COMM_STOP_OUTPUT);
+                                    else
+                                        commTask.execute(10, COMM_IDLE, COMM_POWER_12V, COMM_DELAY, COMM_RESET_DETONATOR,
+                                                COMM_BLIND_SCAN, COMM_BLIND_SCAN_PROGRESS, COMM_IDLE,
+                                                COMM_GET_UUID_BUFFER, COMM_IDLE, COMM_STOP_OUTPUT);
                                     powerOn = false;
                                 } else {
                                     infoDialog = new InfoDialog();
@@ -748,7 +685,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
                                     infoDialog.show(getSupportFragmentManager(), "info");
                                 }
                                 break;
-                            case 5:
+                            case 8:
                                 Bundle bundle = new Bundle();
                                 bundle.putInt("sort type", sortType);
                                 bundle.putInt("sort up down", sortUpDown);
@@ -834,7 +771,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
         getWindowManager().getDefaultDisplay().getMetrics(dm);
 
 
-        popupMenuOther = new PopupWindow(layout, dm.widthPixels / 2, dm.heightPixels / 5 * 3);
+        popupMenuOther = new PopupWindow(layout, dm.widthPixels / 2, dm.heightPixels / 4 * 3);
         //window.setAnimationStyle(R.style.popup_window_anim);
         //popupMenuOther.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#F8F8F8")));
         //ColorDrawable dw = new ColorDrawable(0xffffffff);
@@ -847,33 +784,88 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
         //window.showAtLocation(findViewById(R.id.imageViewAction), Gravity.TOP+Gravity.LEFT,200,0);
     }
 
-    public void showOpenFileWindow(String str, int s, View.OnClickListener onClickListener) {
+    @SuppressLint("DefaultLocale")
+    public void showOpenFileWindow(int type, String str, int s, View.OnClickListener onClickListener) {
         if (popupOpenFile != null && popupOpenFile.isShowing()) {
             return;
         }
-        int i, len;
+        int i, j, k, len;
         String tmp0, tmp1;
-        File file = new File(getSDPath() + "//xdyBlaster");
+        List<String> listFileName = new ArrayList<String>();
+        File file;
+        if (type == 2)
+            file = new File(getSDPath() + "//xdyBlaster//history//");
+        else
+            file = new File(getSDPath() + "//xdyBlaster//record//");
         if (!file.exists()) {
             file.mkdir();
         }
         File[] files = file.listFiles();
-        List<String> listFileName = new ArrayList<String>();
-        if (files.length != 0) {
-            for (i = 0; i < files.length; i++) {
-                if (files[i].isFile()) {
-                    tmp0 = files[i].getName().toString();
-                    len = tmp0.lastIndexOf(".");
-                    if (len != -1) {
-                        tmp1 = tmp0.substring(len + 1, tmp0.length());
-                        if (tmp1.equals("net")) {
-                            //tmp1 = tmp0.substring(0, len);
-                            listFileName.add(tmp0);
+        String viewData;
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        if (type == 2) {
+//            if (files.length != 0) {
+//                for (i = 0; i < files.length; i++) {
+//                    if (files[i].isFile()) {
+//                        tmp0 = files[i].getName().toString();
+//                        len = tmp0.lastIndexOf(".");
+//                        if (len != -1) {
+//                            tmp1 = tmp0.substring(len + 1, tmp0.length());
+//                            if (tmp1.equals("net") && !tmp0.equals("default.net")) {
+//                                //tmp1 = tmp0.substring(0, len);
+//                                listFileName.add(tmp0);
+//                            }
+//                        }
+//                    }
+//                }
+//                Collections.sort(listFileName);
+            for (j = 0; j < 10; j++) {
+                k = 0;
+                for (i = 0; i < files.length; i++) {
+                    if (files[i].isFile()) {
+                        tmp0 = files[i].getName().toString();
+                        if (tmp0.equals(historyName[j])) {
+                            FileFunc.loadDetonatorSetting("//history//" + tmp0, dataViewModel.detonatorSetting);
+                            if (dataViewModel.detonatorSetting.getDate() != 0) {
+                                viewData = String.format("%d发 %s", dataViewModel.detonatorSetting.getTotal(), formatter.format(dataViewModel.detonatorSetting.getDate()));
+                            } else {
+                                viewData = formatter.format(new Date(files[i].lastModified()));
+                            }
+
+                            listFileName.add(viewData);
+                            k = 1;
+                            break;
                         }
                     }
                 }
+                if (k == 0)
+                    listFileName.add("空");
+            }
+        } else {
+            for (j = 0; j < 5; j++) {
+                k = 0;
+                for (i = 0; i < files.length; i++) {
+                    if (files[i].isFile()) {
+                        tmp0 = files[i].getName().toString();
+                        if (tmp0.equals(recordName[j])) {
+                            FileFunc.loadDetonatorSetting("//record//" + tmp0, dataViewModel.detonatorSetting);
+                            if (dataViewModel.detonatorSetting.getDate() != 0) {
+                                viewData = String.format("%d发 %s", dataViewModel.detonatorSetting.getTotal(), formatter.format(dataViewModel.detonatorSetting.getDate()));
+                            } else {
+                                viewData = formatter.format(new Date(files[i].lastModified()));
+                            }
+
+                            listFileName.add(viewData);
+                            k = 1;
+                            break;
+                        }
+                    }
+                }
+                if (k == 0)
+                    listFileName.add("空");
             }
         }
+
 
         LinearLayout layout = (LinearLayout) this.getLayoutInflater().inflate(R.layout.layout_open_file, null);
         TextView textView = layout.findViewById(R.id.tv_title);
@@ -989,7 +981,10 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
     public void findDetonatorValues(int n) {
         SharedPreferences mShare;
         mShare = getSharedPreferences("setting", Context.MODE_PRIVATE);
-        detonatorArea = mShare.getInt("area", 0);
+        if (delayTimeSelect == 4)
+            detonatorArea = mShare.getInt("fixArea", 0);
+        else
+            detonatorArea = mShare.getInt("area", 0);
         switch (n) {
             case 0:
                 if (delayTimeSelect == 0 || delayTimeSelect == 2)
@@ -1014,7 +1009,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
         }
         if (delayTimeSelect >= 2)
             detonatorDelay *= (-1);
-        tvDelay.setText("时差" + delayTimeString[delayTimeSelect]);
+
         int i = dataViewModel.detonatorDatas.size();
         detonatorHole = 0;
         if (i == 0) {
@@ -1030,49 +1025,16 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
             }
             detonatorHole++;
         }
+        if (delayTimeSelect == 4) {
+            tvDelay.setText("固定" + delayTimeString[delayTimeSelect]);
+            detonatorTime=Integer.parseInt(delayTimeString[delayTimeSelect]);
+        }
+        else
+            tvDelay.setText("时差" + delayTimeString[delayTimeSelect]);
     }
 
 
     public void addDetonatorData() {
-//        int i;
-//        int n;
-//        n = dataViewModel.detonatorList.get(vpNum).size();
-//        detonatorTime = 0;
-//        for (i = 0; i < n; i++) {
-//            if (dataViewModel.detonatorList.get(vpNum).get(i).getId() == 0)
-//                break;
-//            detonatorTime += dataViewModel.detonatorList.get(vpNum).get(i).getDelay();
-//        }
-//        if (i == n) {
-//            i = dataViewModel.detonatorList.get(vpNum).size();
-//            detonatorHole = i;
-//            if (i != 0)
-//                detonatorTime = dataViewModel.detonatorList.get(vpNum).get(i - 1).getBlasterTime() + detonatorDelay;
-//            else
-//                detonatorTime = 0;
-//            DetonatorData data = new DetonatorData();
-//            data.setRowNum(vpNum);
-//            data.setHoleNum(detonatorHole);
-//            if (i != 0)
-//                data.setDelay(detonatorDelay);
-//            else
-//                data.setDelay(0);
-//            data.setBlasterTime(detonatorTime);
-//            data.setId(scanID);
-//            data.setColor(0);
-//            dataViewModel.detonatorList.get(vpNum).add(data);
-//            dataViewModel.updateList.get(vpNum).postValue(detonatorHole);
-//        } else {
-//            dataViewModel.detonatorList.get(vpNum).get(i).setBlasterTime(detonatorTime);
-//            dataViewModel.detonatorList.get(vpNum).get(i).setId(scanID);
-//            dataViewModel.updateList.get(vpNum).postValue(i);
-//        }
-//        dataViewModel.detonatorDatas.clear();
-//        for (i = 0; i < dataViewModel.detonatorList.size(); i++) {
-//            for (int j = 0; j < dataViewModel.detonatorList.get(i).size(); j++) {
-//                dataViewModel.detonatorDatas.add(dataViewModel.detonatorList.get(i).get(j));
-//            }
-//        }
         DetonatorData data = new DetonatorData();
         data.setDelay(detonatorDelay);
         data.setBlasterTime(detonatorTime);
@@ -1129,6 +1091,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
         sortType = mShare.getInt("sort type", 0);
         sortUpDown = mShare.getInt("sort up down", 0);
         f1f2Mode = mShare.getInt("f1f2mode", 0);
+        delayTimeSelect=mShare.getInt("delayTimeSelect", 0);
         //myReceiver.converKey = false;
         if (f1f2Mode == 0)
             str = "脚线";
@@ -1143,8 +1106,16 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
         delayTimeString[1] = "+" + String.valueOf(mShare.getInt("f2", 50));
         delayTimeString[2] = "-" + String.valueOf(mShare.getInt("f1", 50));
         delayTimeString[3] = "-" + String.valueOf(mShare.getInt("f2", 50));
-        tvDelay.setText("时差" + delayTimeString[delayTimeSelect]);
-        detonatorArea = mShare.getInt("area", 0);
+        delayTimeString[4] = String.valueOf(mShare.getInt("fixDelay", 50));
+        if(delayTimeSelect==4)
+        {
+            tvDelay.setText("固定" + delayTimeString[delayTimeSelect]);
+            detonatorArea = mShare.getInt("fixArea", 0);
+            }
+        else {
+            tvDelay.setText("时差" + delayTimeString[delayTimeSelect]);
+            detonatorArea = mShare.getInt("area", 0);
+        }
         tvArea.setText(String.valueOf(detonatorArea + 1) + "区");
     }
 
@@ -1159,6 +1130,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
                 dataViewModel.detonatorList.get(0).remove(itemSelect);
                 dataViewModel.dataChanged = true;
                 fragments.get(0).detonatorAdapter.notifyDataSetChanged();
+                updateCount();
                 break;
             case 2:
                 if (item == -1)
@@ -1450,7 +1422,7 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
                                 breaking = true;
                                 break;
                         }
-                        infoDialog.setMessageTxt(String.format("发现%d发雷管(%d/7)", d,i));
+                        infoDialog.setMessageTxt(String.format("发现%d发雷管(%d/7)", d, i));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -1645,25 +1617,25 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
 
     @Override
     public void onBackPressed() {
-        if (dataViewModel.dataChanged) {
-            FragmentLoad fragmentLoad = new FragmentLoad();
-            fragmentLoad.loadFile = false;
-            onExitListener = new FragmentLoad.OnExitListener() {
-                @Override
-                public void OnExit() {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            dataViewModel.dataChanged = false;
-                            finish();
-                        }
-                    });
-                }
-            };
-            fragmentLoad.onExitListener = onExitListener;
-            fragmentLoad.show(getSupportFragmentManager(), "save");
-        } else
-            super.onBackPressed();
+//        if (dataViewModel.dataChanged) {
+//            FragmentLoad fragmentLoad = new FragmentLoad();
+//            fragmentLoad.loadFile = false;
+//            onExitListener = new FragmentLoad.OnExitListener() {
+//                @Override
+//                public void OnExit() {
+//                    runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            dataViewModel.dataChanged = false;
+//                            finish();
+//                        }
+//                    });
+//                }
+//            };
+//            fragmentLoad.onExitListener = onExitListener;
+//            fragmentLoad.show(getSupportFragmentManager(), "save");
+//        } else
+        super.onBackPressed();
     }
 
     public void reStart() {
@@ -1687,12 +1659,15 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
 
     @Override
     protected void onPause() {
-        super.onPause();
+        //saveDataChange();
+        shiftRecord();
         if (scanUtil != null) {
             scanUtil.setScanMode(1);
 //            scanUtil.close();
 //            scanUtil = null;
         }
+        super.onPause();
+
     }
 
     private final BroadcastReceiver homePressReceiver = new BroadcastReceiver() {
@@ -1727,8 +1702,54 @@ public class DelayPrjActivity extends AppCompatActivity implements CustomAdapt, 
         if (dataViewModel.dataChanged) {
             FileFunc.saveDetonatorFile(dataViewModel.fileName, dataViewModel.detonatorSetting, dataViewModel.detonatorDatas);
             dataViewModel.dataChanged = false;
+            dataViewModel.dataShift = true;
         }
     }
+
+    private void shiftRecord() {
+        File file = new File(getSDPath() + "//xdyBlaster//history//");
+        if (!file.exists()) {
+            file.mkdir();
+        }
+        if (dataViewModel.dataChanged || dataViewModel.dataShift) {
+            if (dataViewModel.dataChanged)
+                FileFunc.saveDetonatorFile(dataViewModel.fileName, dataViewModel.detonatorSetting, dataViewModel.detonatorDatas);
+            dataViewModel.dataChanged = false;
+            dataViewModel.dataShift = false;
+            if (dataViewModel.detonatorDatas.size() != 0) {
+                copySdcardFile(getSDPath() + "//xdyBlaster//history//h8.net", getSDPath() + "//xdyBlaster//history//h9.net");
+                copySdcardFile(getSDPath() + "//xdyBlaster//history//h7.net", getSDPath() + "//xdyBlaster//history//h8.net");
+                copySdcardFile(getSDPath() + "//xdyBlaster//history//h6.net", getSDPath() + "//xdyBlaster//history//h7.net");
+                copySdcardFile(getSDPath() + "//xdyBlaster//history//h5.net", getSDPath() + "//xdyBlaster//history//h6.net");
+                copySdcardFile(getSDPath() + "//xdyBlaster//history//h4.net", getSDPath() + "//xdyBlaster//history//h5.net");
+                copySdcardFile(getSDPath() + "//xdyBlaster//history//h3.net", getSDPath() + "//xdyBlaster//history//h4.net");
+                copySdcardFile(getSDPath() + "//xdyBlaster//history//h2.net", getSDPath() + "//xdyBlaster//history//h3.net");
+                copySdcardFile(getSDPath() + "//xdyBlaster//history//h1.net", getSDPath() + "//xdyBlaster//history//h2.net");
+                copySdcardFile(getSDPath() + "//xdyBlaster//history//h0.net", getSDPath() + "//xdyBlaster//history//h1.net");
+                copySdcardFile(getSDPath() + "//xdyBlaster//default.net", getSDPath() + "//xdyBlaster//history//h0.net");
+            }
+        }
+    }
+
+    public int copySdcardFile(String fromFile, String toFile) {
+        try {
+
+            InputStream fosfrom = new FileInputStream(fromFile);
+            OutputStream fosto = new FileOutputStream(toFile);
+            byte bt[] = new byte[4096];
+            int c;
+            while ((c = fosfrom.read(bt)) > 0) {
+                fosto.write(bt, 0, c);
+            }
+            fosfrom.close();
+            fosto.close();
+            return 0;
+        } catch (Exception ex) {
+            return -1;
+        }
+    }
+
+
 }
 
 

@@ -72,6 +72,7 @@
                     android:ems="20"
                     android:maxLength="13"
                     android:gravity="center"
+
                     android:textSize="22sp" />
 
 
@@ -157,7 +158,22 @@
                     android:text="取消"
                     android:textColor="@color/white"
                     android:textSize="24sp" />
-
+                <Button
+                    android:id="@+id/btScan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/blue_btn"
+                    android:shadowColor="#20000000"
+                    android:shadowDx="2"
+                    android:shadowDy="2"
+                    android:shadowRadius="1"
+                    android:stateListAnimator="@null"
+                    android:text="扫描"
+                    android:textColor="@color/white"
+                    android:textSize="24sp" />
                 <Button
                     android:id="@+id/btConfirm"
                     android:layout_width="wrap_content"

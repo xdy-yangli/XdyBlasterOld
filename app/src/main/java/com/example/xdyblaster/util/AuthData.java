@@ -6,7 +6,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.baidu.location.h.b.e;
+//import static com.baidu.location.h.b.e;
 
 public class AuthData {
     public String cwxx = "1";

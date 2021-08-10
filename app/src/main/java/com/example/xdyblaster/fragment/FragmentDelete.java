@@ -1,8 +1,11 @@
 package com.example.xdyblaster.fragment;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -22,6 +25,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.xdyblaster.R;
+//import com.example.xdyblaster.util.AllCapTransformationMethod;
 import com.example.xdyblaster.util.DataViewModel;
 import com.example.xdyblaster.util.DetonatorData;
 import com.example.xdyblaster.util.FileFunc;
@@ -93,6 +97,32 @@ public class FragmentDelete extends DialogFragment {
         Bundle bundle = getArguments();
         type = bundle.getInt("type", 0);
         row = bundle.getInt("row", 0);
+        //etId.setTransformationMethod(new AllCapTransformationMethod());
+        etId.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                //下面这种方法才是真正的将输入的小写字母转换为大写字母
+                etId.removeTextChangedListener(this);
+                etId.setText(s.toString().toUpperCase());
+                //在输入完毕后定位到光标的末尾
+                //mEdtCarNo.setSelection(s.length());
+                /**在输入完毕后定位到当前修改的末尾 = start + count*/
+                etId.setSelection(start+count);
+                etId.addTextChangedListener(this);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+
         etId.setText("0");
         switch (type) {
             case 0:
@@ -367,6 +397,7 @@ public class FragmentDelete extends DialogFragment {
             dataViewModel.detonatorDatas.add(dataViewModel.detonatorList.get(0).get(j));
         }
         FileFunc.saveDetonatorFile(dataViewModel.fileName, dataViewModel.detonatorSetting, dataViewModel.detonatorDatas);
+        dataViewModel.dataShift=true;
         FragmentLoad fragmentLoad = new FragmentLoad();
         fragmentLoad.setCancelable(false);
         fragmentLoad.show(getActivity().getSupportFragmentManager(), "load");

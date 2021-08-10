@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+
+        android:layout_width="500dp"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:orientation="vertical"
+        tools:ignore="MissingConstraints">
+
+        <LinearLayout
+            android:id="@+id/lt_item"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvBridgeIndex"
+                android:layout_width="80dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="序号"
+                android:textColor="@color/colorBlack0"
+                android:textSize="22sp"
+                android:textStyle="bold|italic"
+                app:autoSizeMaxTextSize="24dp"
+                app:autoSizeMinTextSize="12dp"
+                app:autoSizeStepGranularity="1sp"
+                app:autoSizeTextType="uniform" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="?android:attr/listDivider" />
+
+            <TextView
+                android:id="@+id/tvBridgeUid"
+                android:layout_width="200dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="编码"
+                android:textColor="@color/colorBlack0"
+                android:textSize="20sp"
+                android:textStyle="bold|italic"
+                app:autoSizeMaxTextSize="24dp"
+                app:autoSizeMinTextSize="12dp"
+                app:autoSizeStepGranularity="1sp"
+                app:autoSizeTextType="uniform" />
+
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="?android:attr/listDivider" />
+
+            <TextView
+                android:id="@+id/tvBridgeCap"
+                android:layout_width="110dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="编码"
+                android:textColor="@color/colorBlack0"
+                android:textSize="20sp"
+                android:textStyle="bold|italic"
+                app:autoSizeMaxTextSize="24dp"
+                app:autoSizeMinTextSize="12dp"
+                app:autoSizeStepGranularity="1sp"
+                app:autoSizeTextType="uniform" />
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="?android:attr/listDivider" />
+
+            <TextView
+                android:id="@+id/tvBridgeBridge"
+                android:layout_width="110dp"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="编码"
+                android:textColor="@color/colorBlack0"
+                android:textSize="20sp"
+                android:textStyle="bold|italic"
+                app:autoSizeMaxTextSize="24dp"
+                app:autoSizeMinTextSize="12dp"
+                app:autoSizeStepGranularity="1sp"
+                app:autoSizeTextType="uniform" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -42,6 +42,7 @@ import com.example.xdyblaster.util.InfoDialog;
 import com.example.xdyblaster.util.KeyReceiver;
 import com.example.xdyblaster.util.ObservOverCurrent;
 import com.example.xdyblaster.util.ObservVolt;
+import com.example.xdyblaster.util.ObservVoltDetonattor;
 import com.example.xdyblaster.util.SharedPreferencesUtils;
 import com.example.xdyblaster.util.UuidData;
 import com.xuexiang.xupdate.utils.UpdateUtils;
@@ -121,7 +122,7 @@ public class DetonateActivity extends AppCompatActivity {
     InfoDialog infoDialog;
     PopupWindow popupErrorReport;
     ListView lsvOpenFile;
-    ObservVolt observVolt;
+    ObservVoltDetonattor observVolt;
     int detonateStep = 0;
     int newDetonator;
     boolean isFocus = false;
@@ -133,6 +134,8 @@ public class DetonateActivity extends AppCompatActivity {
     public boolean counting = false;
     long debounceTime = 0;
     public boolean countDownRunning = false;
+    public long delayTime;
+
 //    LocationClientOption option = new LocationClientOption();
 
     @SuppressLint("HandlerLeak")
@@ -184,6 +187,7 @@ public class DetonateActivity extends AppCompatActivity {
                     ltDetonate.setVisibility(View.VISIBLE);
                     tvCountDown.setVisibility(View.VISIBLE);
                     ltStart.setVisibility(View.GONE);
+                    dataViewModel.checkVolt = 1;
                     break;
                 case 301:
                 case 1000:
@@ -217,7 +221,7 @@ public class DetonateActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
-        SDKInitializer.initialize(getApplicationContext());
+        //SDKInitializer.initialize(getApplicationContext());
         setContentView(R.layout.activity_detonate);
         ButterKnife.bind(this);
 
@@ -227,6 +231,7 @@ public class DetonateActivity extends AppCompatActivity {
         //FileFunc.loadDetonatorFile(dataViewModel.fileName, dataViewModel.detonatorSetting, dataViewModel.detonatorDatas);
         // myReceiver = new KeyReceiver(this, handler,dataViewModel);
         dataViewModel.keyHandler = handler;
+        dataViewModel.checkVolt = 0;
         FragmentManager fragMe = getSupportFragmentManager();
         frVolt = (FragmentVolt) fragMe.findFragmentById(R.id.fr_volt);
         commTask = new CommTask(this);
@@ -293,7 +298,7 @@ public class DetonateActivity extends AppCompatActivity {
             }
         });
 
-        observVolt = new ObservVolt(this, frVolt, getSupportFragmentManager());
+        observVolt = new ObservVoltDetonattor(this, frVolt, getSupportFragmentManager());
         dataViewModel.volt.observe(this, observVolt);
         dataViewModel.volt.setValue(0);
         dataViewModel.overCurrent.observe(this, new ObservOverCurrent(this, frVolt, getSupportFragmentManager()));
@@ -304,6 +309,34 @@ public class DetonateActivity extends AppCompatActivity {
                     dataViewModel.exit.setValue(1);
                     dataViewModel.offline.setValue(1);
                     finish();
+                }
+                if (integer == 2000) {
+                    dataViewModel.checkVolt = 0;
+                    ltDetonate.setVisibility(View.GONE);
+                    dataViewModel.exit.setValue(1);
+                    dataViewModel.offline.setValue(1);
+                    // dischargeDetonater();
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            ltDetonate.setVisibility(View.GONE);
+                            charged = false;
+                            battEnable = false;
+                            commTask.cancel(true);
+                            commTask = new CommTask(DetonateActivity.this);
+                            detonateStep = 2;
+                            infoDialog = new InfoDialog();
+                            infoDialog.setProgressEnable(true);
+                            infoDialog.setChronometerEnable(true);
+                            infoDialog.setTitle("安全退出");
+                            infoDialog.setMessage("雷管放电");
+                            infoDialog.setCancelable(false);
+                            infoDialog.show(getSupportFragmentManager(), "info");
+                            commTask.execute(1, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_PUT_ID_BUFFER, COMM_ALL_DISCHARGE, COMM_DETONATE_PROGRESS, COMM_STOP_OUTPUT);
+                        }
+                    });
+
                 }
             }
         });
@@ -346,7 +379,11 @@ public class DetonateActivity extends AppCompatActivity {
         dataViewModel.htid = (String) SharedPreferencesUtils.getParam(this, "htid", "0");
         dataViewModel.xmbh = (String) SharedPreferencesUtils.getParam(this, "xmbh", "");
         dataViewModel.userId = (String) SharedPreferencesUtils.getParam(this, "bprysfz", "0");
-        //FileFunc.saveDetonateResult(dataViewModel);
+//
+           dataViewModel.jd = (String) SharedPreferencesUtils.getParam(this, "jdEdit", "0");
+           dataViewModel.wd = (String) SharedPreferencesUtils.getParam(this, "wdEdit", "0");
+           FileFunc.saveDetonateResult(dataViewModel);
+
         if (UpdateUtils.getVersionCode(DetonateActivity.this) < 100)
             dataViewModel.systemCount = 10;
 
@@ -425,6 +462,7 @@ public class DetonateActivity extends AppCompatActivity {
         switch (view.getId()) {
             case R.id.btStart:
                 btStart.setEnabled(false);
+                dataViewModel.checkVolt = 0;
 //                // String str = (String) SharedPreferencesUtils.getParam(DetonateActivity.this, "volt", "0");
                 if ((float) SharedPreferencesUtils.getParam(DetonateActivity.this, "volt", 0.0f) < 20) {
                     infoDialog = new InfoDialog();
@@ -522,6 +560,7 @@ public class DetonateActivity extends AppCompatActivity {
             counting = true;
             battEnable = false;
             commEnable = false;
+            dataViewModel.checkVolt = 0;
             commTask.cancel(true);
             Thread thread = new Thread(new Runnable() {
                 @Override
@@ -629,18 +668,19 @@ public class DetonateActivity extends AppCompatActivity {
 
     public boolean delayMs(int ms) {
         long end;
-        end = System.currentTimeMillis() + ms;
-        while (true) {
-            try {
+        try {
+            end = System.currentTimeMillis() + ms;
+            while (true) {
                 Thread.sleep(1);
-            } catch (Exception e) {
-                Log.e("detonate", "run: 异常：" + e.toString());
+                if (end < System.currentTimeMillis())
+                    return true;
+                if (dataViewModel.countDown == -1000) {
+                    return false;
+                }
             }
-            if (end < System.currentTimeMillis())
-                return true;
-            if (dataViewModel.countDown == -1000) {
-                return false;
-            }
+        } catch (Exception e) {
+            Log.e("detonate", "run: 异常：" + e.toString());
+            return true;
         }
     }
 
@@ -747,10 +787,16 @@ public class DetonateActivity extends AppCompatActivity {
                                         p = i * 100.0f;
                                         p = p / 256;
                                         infoDialog.setMessageTxt(String.format("9.等待电压稳定 %d", values[4]));
+                                        if (UpdateUtils.getVersionCode(DetonateActivity.this) > 100)
+                                            delayTime = System.currentTimeMillis() + 20000;
+                                        else
+                                            delayTime = System.currentTimeMillis() + 2000;
                                         break;
                                     case 10:
+                                        if (delayTime > System.currentTimeMillis())
+                                            break;
                                         p = 100;
-                                        infoDialog.setMessageTxt(String.format("10.网络正常，可以起爆"));
+                                        infoDialog.setMessageTxt("10.网络正常，可以起爆");
                                         running = false;
                                         breaking = true;
                                         infoDialog.dismiss();

@@ -72,6 +72,7 @@ import static com.example.xdyblaster.util.CommDetonator.COMM_GET_BATT;
 import static com.example.xdyblaster.util.CommDetonator.COMM_GET_ID_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_GET_UUID_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_IDLE;
+import static com.example.xdyblaster.util.CommDetonator.COMM_POWER_12V;
 import static com.example.xdyblaster.util.CommDetonator.COMM_POWER_ON;
 import static com.example.xdyblaster.util.CommDetonator.COMM_PUT_AREA_BUFFER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_PUT_ID_BUFFER;
@@ -111,6 +112,7 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
     private boolean firstBoot;
     private SerialPortUtils serialPortUtils;
     public int newDetonator;
+    public int highScan;
     @SuppressLint("HandlerLeak")
     Handler handler = new Handler() {
         @SuppressLint("HandlerLeak")
@@ -234,7 +236,7 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
                 }
             }
         });
-
+        highScan = (int) SharedPreferencesUtils.getParam(NetActivity.this, "high_scan", 0);
     }
 
 
@@ -438,8 +440,12 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
                 commTask.cancel(true);
                 commTask = new CommTask(NetActivity.this);
                 commTask.setTotalCount(dataViewModel.detonatorDatas.size(), 0);
-                commTask.execute(8, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_RESET_DETONATOR,
-                        COMM_PUT_AREA_BUFFER, COMM_CHECK_NET, COMM_DETONATE_PROGRESS, COMM_GET_ID_BUFFER, COMM_WAIT_PUBLISH, COMM_GET_UUID_BUFFER, COMM_WAIT_PUBLISH, COMM_IDLE, COMM_STOP_OUTPUT);
+                if (highScan == 1)
+                    commTask.execute(8, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_RESET_DETONATOR,
+                            COMM_PUT_AREA_BUFFER, COMM_CHECK_NET, COMM_DETONATE_PROGRESS, COMM_GET_ID_BUFFER, COMM_WAIT_PUBLISH, COMM_GET_UUID_BUFFER, COMM_WAIT_PUBLISH, COMM_IDLE, COMM_STOP_OUTPUT);
+                else
+                    commTask.execute(8, COMM_IDLE, COMM_POWER_12V, COMM_DELAY, COMM_RESET_DETONATOR,
+                            COMM_PUT_AREA_BUFFER, COMM_CHECK_NET, COMM_DETONATE_PROGRESS, COMM_GET_ID_BUFFER, COMM_WAIT_PUBLISH, COMM_GET_UUID_BUFFER, COMM_WAIT_PUBLISH, COMM_IDLE, COMM_STOP_OUTPUT);
                 viewFlag = 0x0ff;
                 showResult = true;
 
@@ -520,7 +526,10 @@ public class NetActivity extends AppCompatActivity implements CustomAdapt, Deton
                 infoDialog.show(getSupportFragmentManager(), "info");
                 commTask.cancel(true);
                 commTask = new CommTask(NetActivity.this);
-                commTask.execute(8, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_DOWNLOAD_DATA, COMM_IDLE, COMM_STOP_OUTPUT);
+                if (highScan == 1)
+                    commTask.execute(8, COMM_IDLE, COMM_POWER_ON, COMM_DELAY, COMM_DOWNLOAD_DATA, COMM_IDLE, COMM_STOP_OUTPUT);
+                else
+                    commTask.execute(8, COMM_IDLE, COMM_POWER_12V, COMM_DELAY, COMM_DOWNLOAD_DATA, COMM_IDLE, COMM_STOP_OUTPUT);
                 enableButton(false);
                 break;
         }

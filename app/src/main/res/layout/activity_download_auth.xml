@@ -38,8 +38,9 @@
 
             <ScrollView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                >
+                android:id="@+id/edit_page"
+                android:layout_height="0dp"
+                android:layout_weight="1">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -49,7 +50,6 @@
 
                     <LinearLayout
                         android:id="@+id/lt_name"
-                        android:visibility="gone"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
@@ -86,11 +86,12 @@
                             android:background="@drawable/blue_btn"
                             android:focusable="true"
                             android:gravity="center"
-                            android:text="历史记录"
+                            android:text="记录"
                             android:textColor="@color/white"
                             android:textSize="20sp" />
 
                     </LinearLayout>
+
 
                     <LinearLayout
                         android:id="@+id/lt_htid"
@@ -308,26 +309,24 @@
                             android:layout_weight="1"
                             android:gravity="center|right"
                             android:text="总数：0"
-                            android:textSize="24sp" />
+                            android:textSize="24sp"
+                            tools:ignore="RtlHardcoded" />
                     </LinearLayout>
 
+                    <com.example.xdyblaster.util.ListViewForScrollView
+                        android:id="@+id/listLg"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginBottom="10dp">
 
-
-
+                    </com.example.xdyblaster.util.ListViewForScrollView>
                 </LinearLayout>
+
+
             </ScrollView>
-
-            <ListView
-                android:id="@+id/listLg"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginBottom="10dp"
-                android:layout_weight="1">
-
-            </ListView>
         </LinearLayout>
 
         <LinearLayout

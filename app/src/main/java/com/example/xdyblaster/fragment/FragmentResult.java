@@ -28,7 +28,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
-import io.realm.Realm;
+//import io.realm.Realm;
 import utils.SerialPortUtils;
 
 public class FragmentResult extends DialogFragment {
@@ -70,7 +70,7 @@ public class FragmentResult extends DialogFragment {
     int correct, error, timeErr, rowErr, holeErr, outline, count;
     int viewFlag, total;
     public OnButtonClickListener onButtonClickListener;
-    Realm mRealm = Realm.getDefaultInstance();
+    //Realm mRealm = Realm.getDefaultInstance();
     @BindView(R.id.tv_total)
     TextView tvTotal;
 

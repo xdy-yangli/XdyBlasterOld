@@ -52,14 +52,17 @@ import utils.SerialPortUtils;
 
 import static android.view.KeyEvent.KEYCODE_UNKNOWN;
 import static com.example.xdyblaster.MainActivity.actionScan;
+import static com.example.xdyblaster.util.AppConstants.ID_FACTORY;
 import static com.example.xdyblaster.util.CommDetonator.COMM_CHECK_ONLINE;
 import static com.example.xdyblaster.util.CommDetonator.COMM_GET_BATT;
 import static com.example.xdyblaster.util.CommDetonator.COMM_IDLE;
+import static com.example.xdyblaster.util.CommDetonator.COMM_POWER_9V;
 import static com.example.xdyblaster.util.CommDetonator.COMM_POWER_ON;
 import static com.example.xdyblaster.util.CommDetonator.COMM_SCAN;
 import static com.example.xdyblaster.util.CommDetonator.COMM_WRITE_AREA;
 import static com.example.xdyblaster.util.CommDetonator.COMM_WRITE_PASSWORD;
 import static com.example.xdyblaster.util.CommDetonator.COMM_WRITE_UUID;
+import static com.example.xdyblaster.util.UartData.CRC16;
 
 public class EncodeActivity extends AppCompatActivity implements CustomAdapt {
 
@@ -238,7 +241,7 @@ public class EncodeActivity extends AppCompatActivity implements CustomAdapt {
         dataViewModel.volt.observe(this, observVolt);
         dataViewModel.volt.setValue(0);
         commTask = new CommTask(this);
-        commTask.execute(3, COMM_IDLE, COMM_GET_BATT, COMM_GET_BATT, COMM_POWER_ON);
+        commTask.execute(3, COMM_IDLE, COMM_GET_BATT, COMM_GET_BATT, COMM_POWER_9V);
 
         getkey.setFocusable(true);
         getkey.setFocusableInTouchMode(true);
@@ -317,7 +320,7 @@ public class EncodeActivity extends AppCompatActivity implements CustomAdapt {
         switch (view.getId()) {
             case R.id.btMinus:
                 uuid--;
-                uuidStr = FileFunc.makeUuidString(uuidStr.substring(0,8), (int)(uuid / 100L), (int)(uuid % 100L));
+                uuidStr = FileFunc.makeUuidString(uuidStr.substring(0, 8), (int) (uuid / 100L), (int) (uuid % 100L));
                 etUuid.setText(uuidStr);
                 break;
             case R.id.btEncode:
@@ -325,7 +328,7 @@ public class EncodeActivity extends AppCompatActivity implements CustomAdapt {
                 break;
             case R.id.btPlus:
                 uuid++;
-                uuidStr = FileFunc.makeUuidString(uuidStr.substring(0,8), (int)(uuid / 100L), (int)(uuid % 100L));
+                uuidStr = FileFunc.makeUuidString(uuidStr.substring(0, 8), (int) (uuid / 100L), (int) (uuid % 100L));
                 etUuid.setText(uuidStr);
                 break;
         }
@@ -335,6 +338,7 @@ public class EncodeActivity extends AppCompatActivity implements CustomAdapt {
     public void startScan(int n) {
         if (scanning)
             return;
+        String tmp;
         battEnable = false;
         checkOnline = false;
         commTask.running = false;
@@ -342,9 +346,14 @@ public class EncodeActivity extends AppCompatActivity implements CustomAdapt {
         commTask = new CommTask(EncodeActivity.this);
         commTask.setDetonatorValues(detonatorArea, detonatorHole, detonatorDelay, detonatorTime);
         commTask.setPassword(password);
-        uuidStr = etUuid.getText().toString();
-        if (FileFunc.checkUuidString(uuidStr)) {
+        uuidStr = etUuid.getText().toString().toUpperCase();
+        if (FileFunc.checkFbhString(uuidStr)) {
+            // tmp=FileFunc.getRealUuid(uuidStr);
+            password = CalcUidPassword(uuidStr.getBytes());
             commTask.setUuid(uuidStr);
+            commTask.setPassword(password);
+            etPass.setText(String.format("%08X", password));
+            etUuid.setText(uuidStr);
             commTask.waitPublish = true;
             commTask.execute(4, COMM_SCAN, COMM_WRITE_UUID, COMM_WRITE_AREA, COMM_WRITE_PASSWORD, COMM_CHECK_ONLINE);
             tvStatus.setText("请接入雷管");
@@ -373,20 +382,26 @@ public class EncodeActivity extends AppCompatActivity implements CustomAdapt {
 ////                mEdit.apply();
         uuidStr = mShare.getString("detUuid", "5320409100001");
         assert uuidStr != null;
-        uuid = Long.parseLong(uuidStr.substring((8)));
+        try {
+            uuid = Long.parseLong(uuidStr.substring((8)));
+        }
+        catch (Exception e)
+        {
+            uuid=0;
+        }
 //      uuid = Long.parseLong(uuidStr);
         etUuid.setText(uuidStr);
         password = ThreadLocalRandom.current().nextInt(0, 99999999);
-        etPass.setText(String.valueOf(password));
+        //etPass.setText(String.valueOf(password));
 
     }
 
     public void nextUuidPassword() {
         uuid++;
-        uuidStr = FileFunc.makeUuidString(uuidStr.substring(0,8), (int)(uuid / 100L), (int)(uuid % 100L));
+        uuidStr = FileFunc.makeUuidString(uuidStr.substring(0, 8), (int) (uuid / 100L), (int) (uuid % 100L));
         etUuid.setText(uuidStr);
         password = ThreadLocalRandom.current().nextInt(0, 99999999);
-        etPass.setText(String.valueOf(password));
+        //etPass.setText(String.valueOf(password));
         SharedPreferences mShare = getSharedPreferences("setting", Context.MODE_PRIVATE);
         SharedPreferences.Editor mEdit = mShare.edit();
         mEdit.putString("detUuid", uuidStr);
@@ -452,7 +467,8 @@ public class EncodeActivity extends AppCompatActivity implements CustomAdapt {
                         }
                         SharedPreferencesUtils.setParam(EncodeActivity.this, "detUuid", uuidStr);
                         loadSetting();
-                        nextUuidPassword();
+                        if (!dataViewModel.devId.equals(ID_FACTORY))
+                            nextUuidPassword();
                     }
                     break;
             }
@@ -544,5 +560,32 @@ public class EncodeActivity extends AppCompatActivity implements CustomAdapt {
             //scanUtil.close();
             //scanUtil = null;
         }
+    }
+
+    public int CalcUidPassword(byte[] uuid) {
+        byte[] checkSum = new byte[7];
+        int pass;
+        int crc;
+
+        checkSum[0] = uuid[0];
+        checkSum[1] = uuid[2];
+        checkSum[2] = uuid[4];
+        checkSum[3] = uuid[6];
+        checkSum[4] = uuid[8];
+        checkSum[5] = uuid[10];
+        pass = CRC16(checkSum, 6);
+        pass = pass & 0x0000ffff;
+
+        checkSum[0] = uuid[1];
+        checkSum[1] = uuid[3];
+        checkSum[2] = uuid[5];
+        checkSum[3] = uuid[7];
+        checkSum[4] = uuid[9];
+        checkSum[5] = uuid[11];
+        checkSum[6] = uuid[12];
+        crc = CRC16(checkSum, 7);
+        crc = crc & 0x0000ffff;
+        pass = (pass << 16) | crc;
+        return pass;
     }
 }

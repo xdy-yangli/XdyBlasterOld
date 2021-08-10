@@ -77,7 +77,7 @@ public class ObservVolt implements Observer<Integer> {
                             @Override
                             public void run() {
 
-                                //serialPortUtils.ResetBlaster();
+                                serialPortUtils.ResetBlaster();
                             }
                         });
                         thread.start();

@@ -7,11 +7,14 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -19,6 +22,8 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
@@ -27,10 +32,12 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.xdyblaster.fragment.FragmentAuthInput;
 import com.example.xdyblaster.util.AndroidDes3Util;
+import com.example.xdyblaster.util.AuthHistoryData;
 import com.example.xdyblaster.util.DataViewModel;
 import com.example.xdyblaster.util.FileFunc;
 import com.example.xdyblaster.util.HttpUtil;
 import com.example.xdyblaster.util.InfoDialog;
+import com.example.xdyblaster.util.ListViewForScrollView;
 import com.example.xdyblaster.util.SharedPreferencesUtils;
 
 import org.json.JSONObject;
@@ -49,7 +56,9 @@ import okhttp3.Response;
 import utils.SerialPortUtils;
 
 import static com.example.xdyblaster.util.FileFunc.saveAuthFile;
+import static com.example.xdyblaster.util.FileFunc.saveAuthHistory;
 
+@SuppressLint("NonConstantResourceId")
 public class DownloadAuthActivity extends AppCompatActivity implements CustomAdapt {
 
     @BindView(R.id.lt_htid)
@@ -74,7 +83,7 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
     List<Integer> lgSel = new ArrayList<>();
     ArrayAdapter<String> arrayAdapter;
     @BindView(R.id.listLg)
-    ListView listLg;
+    ListViewForScrollView listLg;
     @BindView(R.id.tvTotal)
     TextView tvTotal;
     @BindView(R.id.etHtid)
@@ -94,11 +103,18 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
     EditText etName;
     @BindView(R.id.lt_position)
     LinearLayout ltPosition;
+    @BindView(R.id.btHistory)
+    Button btHistory;
     private DataViewModel dataViewModel;
-    private SerialPortUtils serialPortUtils;
     String htid, xmbh, dwdm;
     String head;
     AlertDialog dialog;
+    PopupWindow popupMenuOther, popupOpenFile;
+    private static final String[] popupTxt = {"1.保存记录", "2.读取记录","3.删除记录"};
+    private List<AuthHistoryData> authHistoryDataList;
+    ListView lsvOpenFile;
+    public int deleteRecord;
+    public String authName;
 
     @SuppressLint("DefaultLocale")
     @Override
@@ -107,7 +123,7 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_download_auth);
         ButterKnife.bind(this);
-        serialPortUtils = SerialPortUtils.getInstance(this);
+        SerialPortUtils serialPortUtils = SerialPortUtils.getInstance(this);
         dataViewModel = new ViewModelProvider(serialPortUtils.mActivity).get(DataViewModel.class);
         arrayAdapter = new ArrayAdapter<>(this, R.layout.item_file, lgData);
         listLg.setAdapter(arrayAdapter);
@@ -118,6 +134,7 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
         etXmbh.setText((String) SharedPreferencesUtils.getParam(this, "xmbh", ""));
         etDwdm.setText((String) SharedPreferencesUtils.getParam(this, "dwdm", ""));
         etPeople.setText((String) SharedPreferencesUtils.getParam(this, "bprysfz", ""));
+        etName.setText((String) SharedPreferencesUtils.getParam(this, "auth_name", ""));
         cbTester.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -136,6 +153,31 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
 //        btEdit.setFocusableInTouchMode(true);
 //        hideSoftKeyboard(this);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        //if(dataViewModel.devId.isEmpty())
+        dataViewModel.devId = (String) SharedPreferencesUtils.getParam(DownloadAuthActivity.this, "devId", "");
+        authHistoryDataList = FileFunc.loadAuthHistory();
+
+
+    }
+
+    public static void setListViewHeightBasedOnChildren(ListView listView) {
+//        ListAdapter listAdapter = listView.getAdapter();
+//        if (listAdapter == null) {
+//            // pre-condition
+//            return;
+//        }
+//
+//        int totalHeight = 0;
+//        for (int i = 0; i < listAdapter.getCount(); i++) {
+//            View listItem = listAdapter.getView(i, null, listView);
+//            listItem.measure(0, View.MeasureSpec.makeMeasureSpec(0,
+//                    View.MeasureSpec.UNSPECIFIED));
+//            totalHeight += listItem.getMeasuredHeight();
+//        }
+//
+//        ViewGroup.LayoutParams params = listView.getLayoutParams();
+//        params.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
+//        listView.setLayoutParams(params);
     }
 
     public static void hideSoftKeyboard(Activity activity) {
@@ -183,8 +225,8 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
 //    }
 
 
-    @SuppressLint({"SetTextI18n", "DefaultLocale"})
-    @OnClick({R.id.btAdd, R.id.btDel, R.id.btEdit, R.id.btImport})
+    @SuppressLint({"SetTextI18n", "DefaultLocale", "NonConstantResourceId"})
+    @OnClick({R.id.btAdd, R.id.btDel, R.id.btEdit, R.id.btImport, R.id.btHistory})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.btAdd:
@@ -201,12 +243,16 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
                         for (int i = 0; i < count; i++) {
                             for (int j = 0; j < each; j++) {
                                 str = FileFunc.makeUuidString(uuid, i, j);
-                                lgData.add(str);
-                                lgSel.add(0);
+                                if(!lgData.contains(str)) {
+                                    lgData.add(str);
+                                    lgSel.add(0);
+                                }
                             }
                         }
                         tvTotal.setText("总数：" + lgData.size());
+                        setListViewHeightBasedOnChildren(listLg);
                         arrayAdapter.notifyDataSetChanged();
+
                     }
                 };
                 fragmentAuthInput.show(getSupportFragmentManager(), "input");
@@ -229,6 +275,7 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
                     } else
                         i++;
                 }
+                setListViewHeightBasedOnChildren(listLg);
                 arrayAdapter.notifyDataSetChanged();
                 tvTotal.setText("总数：" + lgData.size());
                 break;
@@ -244,46 +291,43 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
                     listLg.setItemChecked(i, false);
                 }
                 tvTotal.setText("总数：" + lgData.size());
+                setListViewHeightBasedOnChildren(listLg);
                 arrayAdapter.notifyDataSetChanged();
                 break;
             case R.id.btEdit:
                 if (lgData.size() == 0)
                     break;
-
+                authName = etName.getText().toString();
                 htid = etHtid.getText().toString();
                 xmbh = etXmbh.getText().toString();
                 dwdm = etDwdm.getText().toString();
                 dataViewModel.userId = etPeople.getText().toString();
-                if (!cbTester.isChecked()) {
-//                    if (htid.isEmpty() && xmbh.isEmpty()) {
-//                        showError("请输入合同ID或项目编号");
-//                        break;
-//                    }
-                    if (dataViewModel.userId.isEmpty()) {
-                        showError("请输爆破人员身份证");
-                        break;
-                    }
-                    if (!htid.isEmpty())
-                        SharedPreferencesUtils.setParam(this, "htid", htid);
-                    else
-                        SharedPreferencesUtils.setParam(this, "htid", "");
-                    if (!xmbh.isEmpty())
-                        SharedPreferencesUtils.setParam(this, "xmbh", xmbh);
-                    else
-                        SharedPreferencesUtils.setParam(this, "xmbh", "");
-                    SharedPreferencesUtils.setParam(this, "bprysfz", dataViewModel.userId);
-                }
                 if (dwdm.isEmpty()) {
                     showError("请输入单位代码");
                     break;
                 }
+                if (dataViewModel.userId.isEmpty()) {
+                    showError("请输爆破人员身份证");
+                    break;
+                }
+                if (!htid.isEmpty())
+                    SharedPreferencesUtils.setParam(this, "htid", htid);
+                else
+                    SharedPreferencesUtils.setParam(this, "htid", "");
+                if (!xmbh.isEmpty())
+                    SharedPreferencesUtils.setParam(this, "xmbh", xmbh);
+                else
+                    SharedPreferencesUtils.setParam(this, "xmbh", "");
+                SharedPreferencesUtils.setParam(this, "bprysfz", dataViewModel.userId);
                 SharedPreferencesUtils.setParam(this, "dwdm", dwdm);
+                SharedPreferencesUtils.setParam(this, "auth_name", authName);
+                SharedPreferencesUtils.setParam(this, "jdEdit", etJd.getText().toString());
+                SharedPreferencesUtils.setParam(this, "wdEdit", etWd.getText().toString());
 
                 httpParams = new LinkedHashMap<>();
                 try {
                     StringBuilder stringBuilder = new StringBuilder();
                     String str;
-                    //                  if (!cbTester.isChecked()) {
                     if (!htid.isEmpty())
                         httpParams.put("htid", htid);
                     if (!xmbh.isEmpty())
@@ -304,7 +348,7 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
 //                }
                     httpParams.put("dwdm", dwdm);
                     httpParams.put("sbbh", dataViewModel.devId);
-                    //httpParams.put("sbbh", "F53AC008018");
+                    // httpParams.put("sbbh", "F53AC00C001");
 
 //                    httpParams.put("jd", "106.59774");//String.format("%f", mCurrentLat));
 //                    httpParams.put("wd","23.90510"); //String.format("%f", mCurrentLon));
@@ -338,6 +382,114 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
                     }
                 });
                 break;
+
+            case R.id.btHistory:
+                showPopupMenuOther(view, popupTxt, new AdapterView.OnItemClickListener() {
+                    @SuppressLint("DefaultLocale")
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        popupMenuOther.dismiss();
+                        int i, j;
+                        String str;
+                        switch (position) {
+                            case 0:
+                                if (etName.getText().toString().isEmpty()) {
+                                    InfoDialog infoDialog = new InfoDialog();
+                                    infoDialog.setTitle("保存记录");
+                                    infoDialog.setProgressEnable(false);
+                                    infoDialog.setMessage("请输入记录名称！");
+                                    infoDialog.show(getSupportFragmentManager(), "info");
+                                } else {
+                                    str = etName.getText().toString();
+                                    i = 0;
+                                    j = -1;
+                                    for (AuthHistoryData d : authHistoryDataList) {
+                                        if (d.getName().equals(str)) {
+                                            j = i;
+                                            break;
+                                        }
+                                        i++;
+                                    }
+                                    if (j != -1) {
+                                        InfoDialog infoDialog = new InfoDialog();
+                                        infoDialog.setTitle("保存记录");
+                                        infoDialog.setProgressEnable(false);
+                                        infoDialog.setMessage("是否覆盖记录？");
+                                        infoDialog.setBtnEnable(true);
+                                        deleteRecord = j;
+                                        infoDialog.setOnButtonClickListener(new InfoDialog.OnButtonClickListener() {
+                                            @Override
+                                            public void onButtonClick(int index, String str) {
+                                                if (index == 1) {
+                                                    authHistoryDataList.remove(deleteRecord);
+                                                    AuthHistoryData authHistoryData = new AuthHistoryData();
+                                                    authHistoryData.setName(etName.getText().toString());
+                                                    authHistoryData.setHtid(etHtid.getText().toString());
+                                                    authHistoryData.setXmbh(etXmbh.getText().toString());
+                                                    authHistoryData.setDwdm(etDwdm.getText().toString());
+                                                    authHistoryData.setBprysfz(etPeople.getText().toString());
+                                                    authHistoryData.setJd(etJd.getText().toString());
+                                                    authHistoryData.setWd(etWd.getText().toString());
+                                                    authHistoryDataList.add(0, authHistoryData);
+                                                    saveAuthHistory(authHistoryDataList);
+                                                }
+                                            }
+                                        });
+                                        infoDialog.show(getSupportFragmentManager(), "info");
+
+                                    } else {
+                                        AuthHistoryData authHistoryData = new AuthHistoryData();
+                                        authHistoryData.setName(etName.getText().toString());
+                                        authHistoryData.setHtid(etHtid.getText().toString());
+                                        authHistoryData.setXmbh(etXmbh.getText().toString());
+                                        authHistoryData.setDwdm(etDwdm.getText().toString());
+                                        authHistoryData.setBprysfz(etPeople.getText().toString());
+                                        authHistoryData.setJd(etJd.getText().toString());
+                                        authHistoryData.setWd(etWd.getText().toString());
+                                        authHistoryDataList.add(0, authHistoryData);
+                                        saveAuthHistory(authHistoryDataList);
+                                    }
+
+                                }
+                                break;
+                            case 1:
+                                showOpenFileWindow(position, "读取记录", ListView.CHOICE_MODE_SINGLE, new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        int s;
+                                        s = lsvOpenFile.getCheckedItemPosition();
+                                        if(s!=-1) {
+                                            AuthHistoryData authHistoryData = authHistoryDataList.get(s);
+                                            etName.setText(authHistoryData.getName());
+                                            etHtid.setText(authHistoryData.getHtid());
+                                            etXmbh.setText(authHistoryData.getXmbh());
+                                            etDwdm.setText(authHistoryData.getDwdm());
+                                            etPeople.setText(authHistoryData.getBprysfz());
+                                            etJd.setText(authHistoryData.getJd());
+                                            etWd.setText(authHistoryData.getWd());
+                                            popupOpenFile.dismiss();
+                                        }
+                                    }
+                                });
+                            case 2:
+                                showOpenFileWindow(position, "删除记录", ListView.CHOICE_MODE_SINGLE, new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        int s;
+                                        s = lsvOpenFile.getCheckedItemPosition();
+                                        if(s!=-1) {
+                                            authHistoryDataList.remove(s);
+                                            saveAuthHistory(authHistoryDataList);
+                                            popupOpenFile.dismiss();
+                                        }
+                                    }
+                                });
+                                break;
+                        }
+                    }
+                });
+                break;
+
         }
 
     }
@@ -378,6 +530,7 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
                     Thread.sleep(100);
                 } catch (Exception e) {
                     e.printStackTrace();
+                    return null;
                 }
             }
             switch (integers[0]) {
@@ -444,13 +597,18 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
                         }
                     }
                     if (b) {
-                        InfoDialog infoDialog = new InfoDialog();
-                        infoDialog.setTitle("故障");
-                        infoDialog.setMessage("数据下载失败！" + cwxxms);
-                        infoDialog.setBtnEnable(true);
-                        infoDialog.show(getSupportFragmentManager(), "info");
+                        try {
+                            InfoDialog infoDialog = new InfoDialog();
+                            infoDialog.setTitle("故障");
+                            infoDialog.setMessageSingleLine(false);
+                            infoDialog.setMessage("网络连接失败！" + cwxxms);
+                            infoDialog.setBtnEnable(true);
+                            infoDialog.show(getSupportFragmentManager(), "info");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     } else {
-                        String fileName = FileFunc.getDate() + " " + htid;// (String) SharedPreferencesUtils.getParam(AuthorizeActivity.this, "htid", "htid");
+                        String fileName = FileFunc.getDate() + " " + authName;// (String) SharedPreferencesUtils.getParam(AuthorizeActivity.this, "htid", "htid");
                         saveAuthFile(fileName, str, htid, xmbh, dwdm);
                         Intent intent = new Intent(DownloadAuthActivity.this, AuthViewActivity.class);
                         intent.putExtra("file", fileName);
@@ -467,4 +625,103 @@ public class DownloadAuthActivity extends AppCompatActivity implements CustomAda
         }
     }
 
+    public void showPopupMenuOther(View view, String[] popupStr, AdapterView.OnItemClickListener onItemClickListener) {
+        if (popupMenuOther != null && popupMenuOther.isShowing()) {
+            return;
+        }
+        RelativeLayout layout = (RelativeLayout) this.getLayoutInflater().inflate(R.layout.popup_window, null);
+        ListView lsvMore = (ListView) layout.findViewById(R.id.lsvMore);
+        lsvMore.setAdapter(new ArrayAdapter<String>(this, R.layout.memu_item, popupStr));
+        lsvMore.setOnItemClickListener(onItemClickListener);
+
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+
+
+        popupMenuOther = new PopupWindow(layout, dm.widthPixels / 2, dm.heightPixels / 4);
+        //window.setAnimationStyle(R.style.popup_window_anim);
+        //popupMenuOther.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#F8F8F8")));
+        //ColorDrawable dw = new ColorDrawable(0xffffffff);
+        //popupMenuOther.setBackgroundDrawable(dw);
+        popupMenuOther.setFocusable(true);
+        popupMenuOther.setOutsideTouchable(true);
+//        popupMenuOther.setOnDismissListener(this);
+        popupMenuOther.update();
+        popupMenuOther.showAsDropDown(view, 0, 0);
+        //window.showAtLocation(findViewById(R.id.imageViewAction), Gravity.TOP+Gravity.LEFT,200,0);
+    }
+
+    public void showOpenFileWindow(int type, String str, int s, View.OnClickListener onClickListener) {
+
+
+        if (popupOpenFile != null && popupOpenFile.isShowing()) {
+            return;
+        }
+        List<String> dataList = new ArrayList<>();
+        for (AuthHistoryData d : authHistoryDataList) {
+            dataList.add(d.getName());
+        }
+
+        LinearLayout layout = (LinearLayout) this.getLayoutInflater().inflate(R.layout.layout_open_file, null);
+        TextView textView = layout.findViewById(R.id.tv_title);
+        textView.setText(str);
+        lsvOpenFile = (ListView) layout.findViewById(R.id.listView_open);
+        lsvOpenFile.setAdapter(new ArrayAdapter<String>(this, R.layout.item_file, dataList));
+        lsvOpenFile.setChoiceMode(s);
+//        lsvOpenFile.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+
+        lsvOpenFile.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                //switch (position) {
+                //lsvOpenFile.setSelection(position);
+
+                //}
+
+                //window.dismiss();
+            }
+        });
+        popupOpenFile = new PopupWindow(layout, 640, 900);
+        //window.setAnimationStyle(R.style.popup_window_anim);
+        //popupMenuOther.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#F8F8F8")));
+//        ColorDrawable dw = new ColorDrawable(-00000);
+//        popupOpenFile.setBackgroundDrawable(dw);
+        popupOpenFile.setFocusable(true);
+        popupOpenFile.setOutsideTouchable(true);
+        popupOpenFile.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                setBackgroundAlpha(DownloadAuthActivity.this, 1.0f);
+            }
+        });
+
+        Button btnConfirm = layout.findViewById(R.id.bt_confirm);
+        btnConfirm.setOnClickListener(onClickListener);
+        Button btnCancel = layout.findViewById(R.id.bt_cancel);
+        btnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                popupOpenFile.dismiss();
+            }
+        });
+        popupOpenFile.update();
+        popupOpenFile.showAtLocation(findViewById(R.id.edit_page), Gravity.CENTER, 0, 0);
+        setBackgroundAlpha(this, 0.5f);
+    }
+
+    /**
+     * 设置页面的透明度
+     *
+     * @param bgAlpha 1表示不透明
+     */
+    public static void setBackgroundAlpha(Activity activity, float bgAlpha) {
+        WindowManager.LayoutParams lp = activity.getWindow().getAttributes();
+        lp.alpha = bgAlpha;
+        if (bgAlpha == 1) {
+            activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);//不移除该Flag的话,在有视频的页面上的视频会出现黑屏的bug
+        } else {
+            activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);//此行代码主要是解决在华为手机上半透明效果无效的bug
+        }
+        activity.getWindow().setAttributes(lp);
+    }
 }

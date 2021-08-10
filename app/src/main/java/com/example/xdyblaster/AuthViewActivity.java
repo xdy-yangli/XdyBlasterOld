@@ -90,7 +90,7 @@ public class AuthViewActivity extends AppCompatActivity implements CustomAdapt {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
-        SDKInitializer.initialize(getApplicationContext());
+        //SDKInitializer.initialize(getApplicationContext());
         setContentView(R.layout.activity_auth_view);
         ButterKnife.bind(this);
         Intent intent = getIntent();

@@ -40,12 +40,14 @@ import com.example.xdyblaster.ble.BleManager;
 import com.example.xdyblaster.fragment.FragmentVolt;
 import com.example.xdyblaster.http.OKHttpUpdateHttpService;
 import com.example.xdyblaster.system.BleActivity;
+import com.example.xdyblaster.system.SystemActivity;
 import com.example.xdyblaster.util.CommDetonator;
 import com.example.xdyblaster.util.DataViewModel;
 import com.example.xdyblaster.util.DetonatorSetting;
 import com.example.xdyblaster.util.InfoDialog;
 import com.example.xdyblaster.util.KeyReceiver;
 import com.example.xdyblaster.util.ObservVolt;
+import com.example.xdyblaster.util.SharedPreferencesUtils;
 import com.xuexiang.xhttp2.XHttp;
 import com.xuexiang.xhttp2.XHttpSDK;
 import com.xuexiang.xupdate.XUpdate;
@@ -57,6 +59,7 @@ import com.zhy.http.okhttp.OkHttpUtils;
 import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -81,6 +84,7 @@ import static android.view.KeyEvent.KEYCODE_7;
 import static android.view.KeyEvent.KEYCODE_8;
 import static android.view.KeyEvent.KEYCODE_9;
 import static android.view.KeyEvent.KEYCODE_DPAD_UP;
+import static com.example.xdyblaster.util.AppConstants.ID_FACTORY;
 import static com.example.xdyblaster.util.CommDetonator.COMM_DELAY;
 import static com.example.xdyblaster.util.CommDetonator.COMM_GET_BATT;
 import static com.example.xdyblaster.util.CommDetonator.COMM_READ_DEV_ID;
@@ -92,6 +96,7 @@ import static com.example.xdyblaster.util.FileFunc.checkFileExists;
 import static com.example.xdyblaster.util.FileFunc.getSystemModel;
 import static com.xuexiang.xupdate.entity.UpdateError.ERROR.CHECK_NO_NEW_VERSION;
 
+@SuppressLint("NonConstantResourceId")
 public class MainActivity extends AppCompatActivity implements CustomAdapt, EasyPermissions.PermissionCallbacks, SerialPortUtils.OnDataReceiveListener, SerialPortUtils.OnKeyDataListener {
 
 
@@ -103,6 +108,8 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
     public static final String action = "broadcast.action";
     public static final String actionScan = "broadcast.scan.barcode";
     public static final String actionStartScan = "broadcast.start.scan";
+    public static final String actionKeyF3Push = "broadcast.key.f3.push";
+    public static final String actionKeyF3Release = "broadcast.key.f3.release";
     public static final int batteryLow = 30;
 
     public final static String[] perms = {
@@ -116,6 +123,7 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
 
     //    @BindView(R.id.imageView)
 //    ImageView imageView;
+
     @BindView(R.id.textView_file)
     TextView textViewFile;
 
@@ -171,21 +179,6 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
     LocationClientOption option = new LocationClientOption();
 
     LocationManager locationManager;
-//    Thread keyThread = new Thread(new Runnable() {
-//        @Override
-//        public void run() {
-//            while (true) {
-//                if (dataViewModel.keyF3 == 1) {
-//                    dataViewModel.keyF3 = 0;
-//                    Message message = new Message();
-//                    message.what = 133;
-//                    message.arg1 = 1;
-//                    if (dataViewModel.keyHandler != null)
-//                        dataViewModel.keyHandler.sendMessage(message);
-//                }
-//            }
-//        }
-//    });
 
 
     @SuppressLint("HandlerLeak")
@@ -216,19 +209,11 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
                     }
                     break;
                 case 131:
-                    if (msg.arg1 == 1) {
-                        f1 = true;
-                    } else {
-                        f1 = false;
-                    }
+                    f1 = (msg.arg1 == 1);
                     break;
 
                 case 132:
-                    if (msg.arg1 == 1) {
-                        f2 = true;
-                    } else {
-                        f2 = false;
-                    }
+                    f2 = (msg.arg1 == 1);
                     break;
             }
         }
@@ -243,7 +228,7 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
         Log.e("start", "Boot 开机自动启动");
         dataViewModel = new ViewModelProvider(this).get(DataViewModel.class);
         serialPortUtils = SerialPortUtils.getInstance(this);
-        SDKInitializer.initialize(getApplicationContext());
+
 
 //        serialPortFinder = new SerialPortFinder();
 //        String[] strings = serialPortFinder.getAllDevices();
@@ -324,15 +309,13 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
             bleManager = BleManager.getInstance(MainActivity.this);
             serialPortUtils.bleManager = BleManager.getInstance(MainActivity.this);
             serialPortUtils.initLocation();
-
-
         } else {                    //没有获取，申请定位权限
             EasyPermissions.requestPermissions(MainActivity.this, "请求获得设备权限", 1, perms);
         }
 
-
         SharedPreferences mShare = getSharedPreferences("setting", Context.MODE_PRIVATE);
         SharedPreferences.Editor mEdit = mShare.edit();
+
         int v = mShare.getInt("file", 0);
         if (v != 0) {
             if (!checkFileExists(mShare.getString("filename", "default.net")))
@@ -346,7 +329,6 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
             setting.setRowDelay("0");
             setting.setCnt("1");
             setting.setRowSequence(false);
-            //    FileFunc.makeDetonatorFile("default.net", setting);
             mEdit.putInt("file", 1);
             mEdit.putString("filename", "default.net");
             mEdit.apply();
@@ -412,6 +394,12 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
         initXHttp();
         initOKHttpUtils();
         initUpdate();
+        String str = (String) SharedPreferencesUtils.getParam(MainActivity.this, "devId", "");
+        if(str.equals(ID_FACTORY)) {
+            Intent intent = new Intent(MainActivity.this, SystemActivity.class);
+            startActivity(intent);
+        }
+
     }
 
 
@@ -519,44 +507,16 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
             }
 
         }
-
         switch (view.getId()) {
             case R.id.layout_single_test:
                 Intent intent = new Intent(MainActivity.this, SingleActivity.class);
                 startActivity(intent);
                 break;
             case R.id.layout_delay_prj:
-
                 intent = new Intent(MainActivity.this, DelayPrjActivity.class);
                 startActivity(intent);
-//                intent = new Intent(MainActivity.this, RegisterAndRecognizeActivity.class);
-//                startActivity(intent);
                 break;
-//            case R.id.layout_open:
-//                Intent i = new Intent(MainActivity.this, FilePickerActivity.class);
-//                i.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
-//                i.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, false);
-//                i.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
-//                i.putExtra(FilePickerActivity.EXTRA_START_PATH, getSDPath() + "/xdyBlaster");//Environment.getExternalStorageDirectory().getPath());
-//                startActivityForResult(i, REQUESTCODE_FROM_ACTIVITY);
-//                break;
-//            case R.id.layout_edit:
-//                if (!dataViewModel.getFileName().isEmpty()) {
-//                    intent = new Intent(MainActivity.this, EditActivity.class);
-//                    startActivity(intent);
-//                }
-//                break;
             case R.id.layout_net:
-//                Thread thread=new Thread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        MinaClient minaClient=new MinaClient();
-//                        minaClient.start();
-//                    }
-//                });
-//                thread.start();
-
-//
                 intent = new Intent(MainActivity.this, NetActivity.class);
                 startActivity(intent);
                 break;
@@ -567,53 +527,11 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
             case R.id.layout_authorize:
                 intent = new Intent(MainActivity.this, AuthorizeActivity.class);
                 startActivity(intent);
-
-
-//                if (!dataViewModel.getFileName().isEmpty()) {
-//                    FragmentSelect fragmentSelect = new FragmentSelect();
-//                    fragmentSelect.setCancelable(true);
-//                    fragmentSelect.show(getSupportFragmentManager(), "select");
-//                    fragmentSelect.setOnSelectListener(new FragmentSelect.OnSelectListener() {
-//                        @Override
-//                        public void onSelect(int index) {
-//                            if (index == 1) {
-//                                Intent intent = new Intent(MainActivity.this, AddActivity.class);
-//                                startActivity(intent);
-//                            }
-//                            if (index == 2) {
-//                                Intent intent = new Intent(MainActivity.this, ScanActivity.class);
-//                                startActivity(intent);
-//                            }
-//                        }
-//                    });
-//                }
                 break;
-
-//            case R.id.layout_update:
-//                if (pieVoltage.isShow || serialPortUtils.busy)
-//                    break;
-//                if (isPowerOn) {
-//                    comm.openVolt(0);
-//                } else {
-//                    SharedPreferences mShare = getSharedPreferences("setting", Context.MODE_PRIVATE);
-//                    float v = mShare.getFloat("volt", 24);
-//                    comm.openVolt((int) (v * 100));
-//                    showVoltAni = 1000;
-//                    showCurrentAni = 1000;
-//                }
             case R.id.layout_setting:
                 intent = new Intent(MainActivity.this, SettingActivity.class);
                 startActivity(intent);
                 break;
-
-//            case R.id.btPower:
-//                if (btPower.isChecked()) {
-//                    comm.openVolt(1600);
-//                    showVoltAni = 1000;
-//                    showCurrentAni = 1000;
-//                } else
-//                    comm.openVolt(0);
-//                break;
         }
     }
 
@@ -657,65 +575,11 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-//        if (requestCode == REQUESTCODE_FROM_ACTIVITY && resultCode == Activity.RESULT_OK) {
-//            if (data.getBooleanExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false)) {
-//                // For JellyBean and above
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-//                    ClipData clip = data.getClipData();
-//
-//                    if (clip != null) {
-//                        for (int i = 0; i < clip.getItemCount(); i++) {
-//                            Uri uri = clip.getItemAt(i).getUri();
-//                            // Do something with the URI
-//                        }
-//                    }
-//                    // For Ice Cream Sandwich
-//                } else {
-//                    ArrayList<String> paths = data.getStringArrayListExtra
-//                            (FilePickerActivity.EXTRA_PATHS);
-//
-//                    if (paths != null) {
-//                        for (String path : paths) {
-//                            Uri uri = Uri.parse(path);
-//                            // Do something with the URI
-//                        }
-//                    }
-//                }
-//
-//            } else {
-//                String str = data.getStringExtra("file");
-//                str = str.substring(str.lastIndexOf("/") + 1);
-//                setOpenFileName(str);
-//            }
-//        }
-//
-//        if (requestCode == REQUESTCODE_NEW_FILE && resultCode == Activity.RESULT_OK) {
-//            setOpenFileName(data.getStringExtra("file"));
-//
-//        }
-//
-//        if (requestCode == REQUESTCODE_GET_PASSWORD && resultCode == Activity.RESULT_OK) {
-////            if (data.getBooleanExtra("password", false)) {
-////                Intent intent = new Intent(MainActivity.this, ChargeActivity.class);
-////                startActivity(intent);
-////            }
-//
-//
-//        }
-
     }
 
     public void setOpenFileName(String str) {
         dataViewModel.setFileName(str);
-        String tmp;
-        tmp = str.substring(0, str.lastIndexOf('.'));
-
-//        textViewFile.setText(getResources().getText(R.string.file_name) + tmp);
         dataViewModel.InitData(dataViewModel.fileName);
-//        icon4.setImageDrawable(getDrawable(R.mipmap.net_plus_s));
-//        icon5.setImageDrawable(getDrawable(R.mipmap.ic_device_hub_white_48dp_s));
-//        icon6.setImageDrawable(getDrawable(R.mipmap.ic_flash_on_white_48dp_s));
     }
 
     @Override
@@ -771,51 +635,6 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
 
     }
 
-    /**
-     * 隐藏虚拟按键，并且全屏
-     */
-    public static void hideBottomNav(Activity activity) {
-        View decorView = activity.getWindow().getDecorView();
-        decorView.setSystemUiVisibility(0);
-        int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN |
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-        decorView.setSystemUiVisibility(uiOptions);
-    }
-
-    /**
-     * 隐藏或显示 导航栏
-     *
-     * @param activity
-     */
-    public static void setNavigationBarVisible(Activity activity, boolean isHide) {
-        if (isHide) {
-            View decorView = activity.getWindow().getDecorView();
-            int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN;
-            decorView.setSystemUiVisibility(uiOptions);
-        } else {
-            View decorView = activity.getWindow().getDecorView();
-            int uiOptions = View.SYSTEM_UI_FLAG_VISIBLE;
-            decorView.setSystemUiVisibility(uiOptions);
-        }
-    }
-
-    //    public void setPowerOffIcon() {
-//        ivPower.setImageDrawable(getResources().getDrawable(R.mipmap.ic_power_red_48dp));
-//        tvPower.setTextColor(getResources().getColor(R.color.red));
-//        tvPower.setText("8.打开电源");
-//        isPowerOn = false;
-//    }
-//
-//    public void setPowerOnIcon() {
-//        ivPower.setImageDrawable(getResources().getDrawable(R.mipmap.ic_power_green_48dp));
-//        tvPower.setTextColor(getResources().getColor(R.color.green));
-//        tvPower.setText("8.关闭电源");
-//        isPowerOn = true;
-//    }
-//
     @Override
     public boolean isBaseOnWidth() {
         return true;
@@ -855,6 +674,10 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
                         dataViewModel.devId = new String(b);
                         textViewFile.setText("ID:" + dataViewModel.devId);
                         textViewFile.setVisibility(View.VISIBLE);
+                        String str;
+                        str = (String) SharedPreferencesUtils.getParam(MainActivity.this, "devId", "");
+                        if (!str.equals(dataViewModel.devId))
+                            SharedPreferencesUtils.setParam(MainActivity.this, "devId", dataViewModel.devId);
                     }
                     waitPublish = false;
                     break;
@@ -1044,7 +867,7 @@ public class MainActivity extends AppCompatActivity implements CustomAdapt, Easy
                 return;
             }
             title.setTextColor(Color.RED);
-            switch (action) {
+            switch (Objects.requireNonNull(action)) {
                 case SDKInitializer.SDK_BROADTCAST_ACTION_STRING_PERMISSION_CHECK_ERROR:
                     // 开放鉴权错误信息描述
                     title.setText("key 验证出错! 错误码 :"

@@ -39,7 +39,7 @@ import java.util.TimerTask;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import io.realm.Realm;
+//import io.realm.Realm;
 import utils.SerialPortUtils;
 
 import static com.example.xdyblaster.util.AppConstants.BLASTER_TIMER_DELAY;
@@ -214,8 +214,7 @@ public class SingleActivity extends AppCompatActivity {
     long keyTime = 0;
     ObservVolt observVolt;
     int testCount;
-    KeyReceiver myReceiver;
-    Realm mRealm = Realm.getDefaultInstance();
+    //Realm mRealm = Realm.getDefaultInstance();
 
     @SuppressLint("HandlerLeak")
     Handler handler = new Handler() {
@@ -426,7 +425,7 @@ public class SingleActivity extends AppCompatActivity {
         mMediaPlayer2.release();
         dataViewModel.keyHandler = null;
         //unregisterReceiver(myReceiver);
-        mRealm.close();
+        //mRealm.close();
 
     }
 

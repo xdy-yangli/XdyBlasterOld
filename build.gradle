@@ -1,15 +1,23 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+ext {
+    easypermissionsVersion = '3.0.0'
+}// Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
     
     repositories {
         google()
-        jcenter()
-        
+        //jcenter()
+        mavenCentral()
+        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/' }
+        maven{ url 'https://maven.aliyun.com/nexus/content/repositories/jcenter'}
+
+
+
+
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.1'
-        classpath 'io.realm:realm-gradle-plugin:7.0.1'
+        classpath 'com.android.tools.build:gradle:7.0.0'
+        //classpath 'io.realm:realm-gradle-plugin:10.2.0'
         
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -20,9 +28,11 @@ buildscript {
 allprojects {
     repositories {
         google()
-        jcenter()
+        //jcenter()
         maven { url 'https://jitpack.io'
         }
+        maven{ url 'https://maven.aliyun.com/nexus/content/groups/public/' }
+        maven{ url 'https://maven.aliyun.com/nexus/content/repositories/jcenter'}
 
         
     }

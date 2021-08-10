@@ -3,6 +3,7 @@ package com.example.xdyblaster.util;
 import android.os.AsyncTask;
 import android.os.Message;
 import android.util.Log;
+import android.view.View;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -96,6 +97,8 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
     public static final int COMM_POWER_12V = 51;
     public static final int COMM_POWER_24V = 52;
     public static final int COMM_PUT_AREA_BUFFER = 53;
+    public static final int COMM_READ_ALL_BRIDGE = 54;
+    public static final int COMM_SET_CLK = 55;
     public SerialPortUtils serialPortUtils;
     public DataViewModel dataViewModel;
     private int ack, devStatus, index, detonatorStatus;
@@ -489,6 +492,15 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
                 serialPortUtils.uartData.data0 = data00;
                 sendSingleCommand(DEV_SET_TEST_DELAY, _MODBUS_WRITE);
                 break;
+            case COMM_SET_CLK:
+                waitPublish = true;
+                serialPortUtils.uartData.data0 = data00;
+                sendSingleCommand(DEV_SET_CLK, _MODBUS_WRITE);
+                break;
+            case COMM_READ_ALL_BRIDGE:
+                readAllBridge();
+                break;
+
             default:
                 break;
         }
@@ -545,6 +557,7 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
     }
 
     private boolean getDetonatorUuid() {
+        int date, year;
         byte[] b = new byte[8];
         serialPortUtils.uartData.eeAddress = EE_UUID;
         sendReadCommand(DEV_READ_EE);
@@ -560,6 +573,30 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
         b[5] = (byte) ((data1 >> 8) & 0x0ff);
         b[6] = (byte) ((data1 >> 16) & 0x0ff);
         b[7] = (byte) ((data1 >> 24) & 0x0ff);
+
+        date = (b[4] & 0x00ff);
+        date = (date << 8) & 0x00ffff;
+        date += (b[5] & 0x0ff);
+        year = date / 16;
+        year = year / 40;
+        if (year == 10) {
+            date = date + 40 * 11 * 16;
+            b[4] = (byte) ((date >> 8) & 0x00ff);
+            b[5] = (byte) (date & 0x00ff);
+        }
+        if (year == 1) {
+            date = date + 40 * 19 * 16;
+            b[4] = (byte) ((date >> 8) & 0x00ff);
+            b[5] = (byte) (date & 0x00ff);
+            if (b[2] == '2')
+                b[2] = 'D';
+            if (b[2] == '1')
+                b[2] = 'C';
+            if (b[2] == '0')
+                b[2] = 'A';
+
+        }
+
         stringUuid = FileFunc.convertUuidString(b, 0);
         return true;
     }
@@ -972,7 +1009,7 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
         }
     }
 
-    public void sendReadCommand(byte cmd, int... d) {
+    public int sendReadCommand(byte cmd, int... d) {
         serialPortUtils.setOnDataReceiveListener(new SerialPortUtils.OnDataReceiveListener() {
 
 
@@ -1030,23 +1067,24 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
                     if (System.currentTimeMillis() > timeOut && cmd == DEV_FAST_SCAN) {
                         publishProgress(step, -1);
                         timeOut = 0;
-                        return;
+                        return -1;
                     }
                 }
                 if (devStatus == _STATUS_SUCCESS) {
                     if (publishSuccess)
                         publishProgress(step, 1, data0, data1, data2, detonatorStatus, devStatus);
-                    return;
+                    return 1;
                 }
             }
             errCnt++;
             if (errCnt > COMM_RETRY) {
                 publishProgress(step, -1);
                 running = false;
-                return;
+                return -1;
             }
             delayMs(30);
         }
+        return -1;
     }
 
 
@@ -1102,6 +1140,9 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
         float[] vData = new float[3];
         if (data[MODBUS_MODE] != _MODBUS_WRITE)
             return;
+        if ((data[MODBUS_STATUS] == _STATUS_OVERCURRENT))
+            return;
+
         Message message = new Message();
         tmp = data[MODBUS_MAC3];
         v = tmp & 0xff;
@@ -1284,6 +1325,47 @@ public class CommDetonator extends AsyncTask<Integer, Integer, Integer> {
             }
             if (isCancelled())
                 break;
+        }
+
+    }
+
+    public void readAllBridge() {
+        int n, p = 0, success = 0, fail = 0;
+        publishSuccess = false;
+        n = dataViewModel.detonatorDatas.size();
+        int i = 0;
+        for (DetonatorData d : dataViewModel.detonatorDatas) {
+            setMac((int) d.getId());
+            sendReadCommand(DEV_SCAN_MAC);
+            if (running & !isCancelled()) {
+                if (sendReadCommand(DEV_TEST_BRIDGE, 1500) == 1) {
+                    float r;
+                    int d0, d1, u;
+                    d0 = data1 & 0x00ffff;
+                    d1 = (data1 >>> 16);
+                    u = d0 * 100 / 280;
+                    //if (u > 200 || u < 60)
+                    dataViewModel.detonatorDatas.get(i).setCap(u);
+                    r = d1;
+                    r = r / d0 * 100.0f;
+                    r = Math.round(r * 10) / 10.0f;
+                    dataViewModel.detonatorDatas.get(i).setBridge(r);
+                } else {
+                    dataViewModel.detonatorDatas.get(i).setCap(0);
+                    dataViewModel.detonatorDatas.get(i).setBridge(0);
+                }
+            }
+            p++;
+            if (running) {
+                success++;
+            } else {
+                running = true;
+                fail++;
+            }
+            publishProgress(step, 1, n, p, success, fail);
+            if (isCancelled())
+                break;
+            i++;
         }
 
     }

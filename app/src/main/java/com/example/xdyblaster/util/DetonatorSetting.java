@@ -7,6 +7,24 @@ public class DetonatorSetting {
     int rowDelay;
     int holeDelay;
     boolean rowSequence;
+    int total;
+    long date;
+
+    public int getTotal() {
+        return total;
+    }
+
+    public void setTotal(int total) {
+        this.total = total;
+    }
+
+    public long getDate() {
+        return date;
+    }
+
+    public void setDate(long date) {
+        this.date = date;
+    }
 
     public boolean isRowSequence() {
         return rowSequence;

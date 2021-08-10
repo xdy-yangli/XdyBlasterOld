@@ -170,7 +170,7 @@
                     android:ems="14"
                     android:maxLength="14"
                     android:gravity="center"
-                    android:inputType="number"
+
                     android:textSize="24sp" />
 
 

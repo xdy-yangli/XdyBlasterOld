@@ -197,7 +197,6 @@
                     android:layout_weight="1"
                     android:ems="10"
                     android:gravity="center"
-                    android:inputType="number"
                     android:textSize="24sp" />
 
 

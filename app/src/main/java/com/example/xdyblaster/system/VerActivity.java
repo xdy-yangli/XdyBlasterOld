@@ -1,6 +1,7 @@
 package com.example.xdyblaster.system;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -16,12 +17,15 @@ import com.example.xdyblaster.util.CommDetonator;
 import com.example.xdyblaster.util.DataViewModel;
 import com.example.xdyblaster.util.FileFunc;
 import com.example.xdyblaster.util.InfoDialog;
+import com.example.xdyblaster.util.SharedPreferencesUtils;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import utils.SerialPortUtils;
 
+import static com.example.xdyblaster.util.AppConstants.ID_EXIT_FACTORY;
+import static com.example.xdyblaster.util.AppConstants.ID_FACTORY;
 import static com.example.xdyblaster.util.CommDetonator.COMM_READ_DEV_ID;
 import static com.example.xdyblaster.util.CommDetonator.COMM_READ_DEV_VER;
 import static com.example.xdyblaster.util.CommDetonator.COMM_WAIT_PUBLISH;
@@ -41,6 +45,7 @@ public class VerActivity extends AppCompatActivity {
     private SerialPortUtils serialPortUtils;
     CommTask commTask;
     byte[] strBytes = new byte[12];
+    public String newID = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,8 +83,16 @@ public class VerActivity extends AppCompatActivity {
                     showError("编号长度错误！");
                     break;
                 }
+                if (dataViewModel.devId.equals(ID_FACTORY)) {
+                    if (!str.equals(ID_EXIT_FACTORY))
+                        break;
+                }
+
+
+                SharedPreferencesUtils.setParam(VerActivity.this, "devId", str);
                 commTask.cancel(true);
                 commTask = new CommTask(this);
+                newID = str;
                 byte[] b = str.getBytes();
                 System.arraycopy(b, 0, strBytes, 0, 11);
                 strBytes[11] = 0;
@@ -118,6 +131,16 @@ public class VerActivity extends AppCompatActivity {
                     }
                     break;
                 case COMM_WRITE_DEV_VER:
+                    if (!dataViewModel.devId.equals(newID)) {
+                        if (newID.equals(ID_FACTORY) || newID.equals(ID_EXIT_FACTORY)) {
+                            final Intent intent = getPackageManager().getLaunchIntentForPackage(getPackageName());
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            startActivity(intent);
+                            //杀掉以前进程
+                            android.os.Process.killProcess(android.os.Process.myPid());
+                            break;
+                        }
+                    }
                     InfoDialog infoDialog = new InfoDialog();
                     infoDialog.setTitle("提示");
                     infoDialog.setMessage("写入成功！");

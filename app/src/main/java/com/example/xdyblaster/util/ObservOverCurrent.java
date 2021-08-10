@@ -39,6 +39,7 @@ public class ObservOverCurrent implements Observer<Integer> {
                 infoDialog.setTitle("电流保护");
                 infoDialog.setMessage("请检查总线是否短路！");
                 infoDialog.setBtnEnable(true);
+                infoDialog.setCancelable(false);
                 infoDialog.setOnButtonClickListener(new InfoDialog.OnButtonClickListener() {
                     @Override
                     public void onButtonClick(int index, String str) {

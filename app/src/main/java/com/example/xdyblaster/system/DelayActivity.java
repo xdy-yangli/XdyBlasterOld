@@ -90,7 +90,7 @@ public class DelayActivity extends AppCompatActivity {
         }
     }
 
-    private class CommTask extends CommDetonator {
+    class CommTask extends CommDetonator {
 
         public CommTask(Context context) {
             this.serialPortUtils = SerialPortUtils.getInstance(context);

@@ -9,6 +9,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import static com.example.xdyblaster.MainActivity.actionKeyF3Push;
+import static com.example.xdyblaster.MainActivity.actionKeyF3Release;
+import static com.example.xdyblaster.MainActivity.actionScan;
 import static com.example.xdyblaster.util.FileFunc.getSystemModel;
 
 public class KeyReceiver extends BroadcastReceiver {
@@ -117,6 +120,9 @@ public class KeyReceiver extends BroadcastReceiver {
                     dataViewModel.keyF3 = 1;
                     keyF3 = 1;
                     Log.e("keyf3", "1");
+                    Intent intent2 = new Intent(actionKeyF3Push);
+                    mContext.getApplicationContext().sendBroadcast(intent2);
+
                 }
                 keyTime1 = System.currentTimeMillis();
             } else if ((keyF3 == 1) && (!b)) {
@@ -126,6 +132,8 @@ public class KeyReceiver extends BroadcastReceiver {
                         dataViewModel.keyHandler.sendMessage(message);
                     keyF3 = 0;
                     Log.e("keyf3", "0");
+                    Intent intent2 = new Intent(actionKeyF3Release);
+                    mContext.getApplicationContext().sendBroadcast(intent2);
                 }
                 keyTime0 = System.currentTimeMillis();
             }

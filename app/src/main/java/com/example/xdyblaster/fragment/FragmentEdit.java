@@ -8,6 +8,8 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -143,12 +145,39 @@ public class FragmentEdit extends DialogFragment {
         etTime.setText(String.valueOf(detonatorTime));
         etRow.setText(String.valueOf(detonatorRow + 1));
         etHole.setText(String.valueOf(detonatorHole + 1));
+
+        etId.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                //下面这种方法才是真正的将输入的小写字母转换为大写字母
+                etId.removeTextChangedListener(this);
+                etId.setText(s.toString().toUpperCase());
+                //在输入完毕后定位到光标的末尾
+                //mEdtCarNo.setSelection(s.length());
+                /**在输入完毕后定位到当前修改的末尾 = start + count*/
+                etId.setSelection(start+count);
+                etId.addTextChangedListener(this);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
         if (detonatorId.isEmpty()) {
             tvTitle.setText("插入雷管");
             etId.setText("");
         } else {
             etId.setText(detonatorId);
         }
+
+
         IntentFilter filter = new IntentFilter(actionScan);
         filter.addAction("android.rfid.FUN_KEY");
         filter.addAction(actionStartScan);

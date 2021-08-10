@@ -48,7 +48,7 @@ public class FragmentBleConnect extends DialogFragment implements BleManager.OnB
         handler = new Handler();
         bleManager.onBleListener = this;
         bleManager.ConnectBle(device);
-        Thread thread=new Thread(new Runnable() {
+        Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 long time = System.currentTimeMillis() + 32000;
@@ -58,6 +58,7 @@ public class FragmentBleConnect extends DialogFragment implements BleManager.OnB
                         Thread.sleep(10);
                     } catch (Exception e) {
                         e.printStackTrace();
+                        return;
                     }
                     if (time < System.currentTimeMillis())
                         break;
@@ -113,7 +114,7 @@ public class FragmentBleConnect extends DialogFragment implements BleManager.OnB
 
     @Override
     public void OnBleConnected(String name, int status) {
-        stopConnect=true;
+        stopConnect = true;
         if (status == 1) {
             handler.post(new Runnable() {
                 @Override
